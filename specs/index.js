@@ -20,30 +20,19 @@
 
 'use strict';
 
-var Spec = require('./compiler/spec');
-var grammarParse = require('./compiler/grammar').parse;
 var thriftrw = require('thriftrw');
-var bufrw = require('bufrw');
+var TYPE = thriftrw.TYPE;
 
-function fromBuffer(buffer, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var obj = type.reify(raw);
-    return obj;
-}
+var APrimitive = require('./aprimitive').APrimitive;
+module.exports.ABool = APrimitive(TYPE.BOOL);
+module.exports.AByte = APrimitive(TYPE.BYTE);
+module.exports.ADouble = APrimitive(TYPE.DOUBLE);
+module.exports.AInt16 = APrimitive(TYPE.I16);
+module.exports.AInt32 = APrimitive(TYPE.I32);
+module.exports.AInt64 = APrimitive(TYPE.I64);
+module.exports.AString = APrimitive(TYPE.STRING);
 
-function toBuffer(obj, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = type.uglify(obj);
-    var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
-    return buf;
-}
-
-function newSpec(specFile) {
-    var source = grammarParse(specFile);
-    return new Spec(source);
-}
-
-module.exports.fromBuffer = fromBuffer;
-module.exports.toBuffer = toBuffer;
-module.exports.newSpec = newSpec;
+module.exports.AMap = require('./amap').AMap;
+module.exports.AList = require('./alist').AList;
+module.exports.AField = require('./astruct').AField;
+module.exports.AStruct = require('./astruct').AStruct;

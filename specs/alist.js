@@ -20,30 +20,35 @@
 
 'use strict';
 
-var Spec = require('./compiler/spec');
-var grammarParse = require('./compiler/grammar').parse;
+var _ = require('lodash');
 var thriftrw = require('thriftrw');
-var bufrw = require('bufrw');
+var TYPE = thriftrw.TYPE;
 
-function fromBuffer(buffer, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var obj = type.reify(raw);
-    return obj;
+function AList(etype) {
+    if (!(this instanceof AList)) {
+        return new AList(etype);
+    }
+    this.typeid = TYPE.LIST;
+    this.etype = etype;
 }
 
-function toBuffer(obj, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = type.uglify(obj);
-    var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
-    return buf;
-}
+AList.prototype.reify = function reify(tlist) {
+    if (this.etype.typeid !== tlist.etypeid) {
+        return [];
+    }
+    var self = this;
+    return _.reduce(tlist.elements, function reduce(list, ele) {
+        list.push(self.etype.reify(ele));
+        return list;
+    }, []);
+};
 
-function newSpec(specFile) {
-    var source = grammarParse(specFile);
-    return new Spec(source);
-}
+AList.prototype.uglify = function uglify(list) {
+    var self = this;
+    return _.reduce(list, function reduce(tlist, ele) {
+        tlist.elements.push(self.etype.uglify(ele));
+        return tlist;
+    }, thriftrw.TList(this.etype.typeid));
+};
 
-module.exports.fromBuffer = fromBuffer;
-module.exports.toBuffer = toBuffer;
-module.exports.newSpec = newSpec;
+module.exports.AList = AList;

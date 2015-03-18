@@ -20,30 +20,22 @@
 
 'use strict';
 
-var Spec = require('./compiler/spec');
-var grammarParse = require('./compiler/grammar').parse;
-var thriftrw = require('thriftrw');
-var bufrw = require('bufrw');
+var PEG = require('pegjs');
+var fs = require('fs');
+var path = require('path');
 
-function fromBuffer(buffer, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var obj = type.reify(raw);
-    return obj;
+function newGrammar() {
+    var grammarPath = path.join(__dirname, 'thrift-idl.pegjs');
+    var grammar = PEG.buildParser(fs.readFileSync(grammarPath).toString());
+    return grammar;
 }
 
-function toBuffer(obj, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = type.uglify(obj);
-    var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
-    return buf;
+function parse(thriftFile, grammar) {
+    if (!grammar) {
+        grammar = newGrammar();
+    }
+    return grammar.parse(fs.readFileSync(thriftFile).toString());
 }
 
-function newSpec(specFile) {
-    var source = grammarParse(specFile);
-    return new Spec(source);
-}
-
-module.exports.fromBuffer = fromBuffer;
-module.exports.toBuffer = toBuffer;
-module.exports.newSpec = newSpec;
+module.exports.newGrammar = newGrammar;
+module.exports.parse = parse;

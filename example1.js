@@ -20,30 +20,14 @@
 
 'use strict';
 
-var Spec = require('./compiler/spec');
-var grammarParse = require('./compiler/grammar').parse;
-var thriftrw = require('thriftrw');
-var bufrw = require('bufrw');
+var thriftify = require('./');
+var debug = require('debug')('test');
 
-function fromBuffer(buffer, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var obj = type.reify(raw);
-    return obj;
-}
+var spec = thriftify.newSpec('example1.thrift');
+debug('spec', spec.getType('Simple1'));
 
-function toBuffer(obj, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = type.uglify(obj);
-    var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
-    return buf;
-}
+var buf = thriftify.toBuffer({int1: 123}, spec, 'Simple1');
+debug('buf', buf);
 
-function newSpec(specFile) {
-    var source = grammarParse(specFile);
-    return new Spec(source);
-}
-
-module.exports.fromBuffer = fromBuffer;
-module.exports.toBuffer = toBuffer;
-module.exports.newSpec = newSpec;
+var obj = thriftify.fromBuffer(buf, spec, 'Simple1');
+debug('obj', obj);

@@ -20,30 +20,44 @@
 
 'use strict';
 
-var Spec = require('./compiler/spec');
-var grammarParse = require('./compiler/grammar').parse;
-var thriftrw = require('thriftrw');
-var bufrw = require('bufrw');
+var specs = require('../');
+var _ = require('lodash');
+var test = require('tape');
+var debug = require('debug')('test');
 
-function fromBuffer(buffer, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var obj = type.reify(raw);
-    return obj;
-}
+test('reify and uglify', function t(assert) {
+    _.each([
+        [
+            specs.AStruct([
+                specs.AField(1, 'name', specs.AString)
+            ]),
+            {name: 'lol'}
+        ],
+        [
+            specs.AList(specs.AInt32),
+            [1, 2, 3]
+        ],
+        [
+            specs.AStruct([
+                specs.AField(1, 'a', specs.AString),
+                specs.AField(2, 'b', specs.AInt32),
+                specs.AField(3, 'x', specs.AStruct([
+                    specs.AField(1, 'c', specs.AString),
+                    specs.AField(2, 'd', specs.AString)
+                ]))
+            ]),
+            {a: 'hello', b: 123, x: {c: '[', d: ']'}}
+        ]
+    ], function each(pair) {
+        var spec = pair[0];
+        var val = pair[1];
 
-function toBuffer(obj, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = type.uglify(obj);
-    var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
-    return buf;
-}
+        var raw = spec.uglify(val);
+        debug('raw', raw);
+        var back = spec.reify(raw);
+        debug('back', back);
 
-function newSpec(specFile) {
-    var source = grammarParse(specFile);
-    return new Spec(source);
-}
-
-module.exports.fromBuffer = fromBuffer;
-module.exports.toBuffer = toBuffer;
-module.exports.newSpec = newSpec;
+        assert.deepEqual(val, back);
+    });
+    assert.end();
+});

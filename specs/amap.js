@@ -20,30 +20,42 @@
 
 'use strict';
 
-var Spec = require('./compiler/spec');
-var grammarParse = require('./compiler/grammar').parse;
+var _ = require('lodash');
 var thriftrw = require('thriftrw');
-var bufrw = require('bufrw');
+var TYPE = thriftrw.TYPE;
 
-function fromBuffer(buffer, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var obj = type.reify(raw);
-    return obj;
+function AMap(ktype, vtype) {
+    if (!(this instanceof AMap)) {
+        return new AMap(ktype, vtype);
+    }
+    this.typeid = TYPE.MAP;
+    this.ktype = ktype;
+    this.vtype = vtype;
 }
 
-function toBuffer(obj, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = type.uglify(obj);
-    var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
-    return buf;
-}
+AMap.prototype.reify = function reify(tmap) {
+    if (this.ktype.typeid !== tmap.ktypeid) {
+        return {};
+    }
+    if (this.vtype.typeid !== tmap.vtypeid) {
+        return {};
+    }
 
-function newSpec(specFile) {
-    var source = grammarParse(specFile);
-    return new Spec(source);
-}
+    var self = this;
+    return _.reduce(tmap.pairs, function reduce(map, pair) {
+        var key = self.ktype.reify(pair[0]);
+        var val = self.vtype.reify(pair[1]);
+        map[key] = val;
+        return map;
+    }, {});
+};
 
-module.exports.fromBuffer = fromBuffer;
-module.exports.toBuffer = toBuffer;
-module.exports.newSpec = newSpec;
+AMap.prototype.uglify = function uglify(map) {
+    var self = this;
+    return _.reduce(map, function reduce(tmap, val, key) {
+        tmap.pairs.push([self.ktype.uglify(key), self.vtype.uglify(val)]);
+        return tmap;
+    }, thriftrw.TMap(this.ktype.typeid, this.vtype.typeid));
+};
+
+module.exports.AMap = AMap;
