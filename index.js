@@ -41,7 +41,9 @@ function toBuffer(obj, spec, typename) {
 
 function newSpec(specFile) {
     var source = grammarParse(specFile);
-    return new Spec(source);
+    var spec = new Spec();
+    spec.walk(source);
+    return spec;
 }
 
 module.exports.fromBuffer = fromBuffer;

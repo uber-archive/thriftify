@@ -23,7 +23,6 @@
 var util = require('util');
 var _ = require('lodash');
 var assert = require('assert');
-
 var specs = require('../specs');
 
 var BUILTIN_TYPES = {
@@ -36,11 +35,10 @@ var BUILTIN_TYPES = {
     'double': specs.ADouble
 };
 
-function Spec(source) {
+function Spec() {
     this.types = _.clone(BUILTIN_TYPES);
     this.services = [];
     this.functions = [];
-    this.walk(source);
 }
 
 Spec.prototype.getType = function getType(name) {
@@ -58,21 +56,24 @@ Spec.prototype.setType = function setType(name, type) {
     this.types[name] = type;
 };
 
-Spec.prototype.parseType = function parseType(t) {
+Spec.prototype.lookupType = function lookupType(t) {
+    // TODO: handle const
+    // TODO: handle typedef
+    // TODO: handle Set
     if (t.type === 'Identifier') {
         return this.getType(t.name);
     } else if (t.type === 'List') {
-        return specs.AList(this.parseType(t.fieldType));
+        return specs.AList(this.lookupType(t.fieldType));
     } else if (t.type === 'Map') {
-        return specs.AMap(this.parseType(t.left), this.parseType(t.right));
+        return specs.AMap(this.lookupType(t.left), this.lookupType(t.right));
     } else {
-        throw new Error('unknown type');
+        throw new Error(util.format('unknown type %s', t.type));
     }
 };
 
 Spec.prototype.parseField = function parseField(f) {
     var fieldName = f.id.name;
-    var fieldType = this.parseType(f.fieldType);
+    var fieldType = this.lookupType(f.fieldType);
     var fieldId = f.fid;
 
     return specs.AField(fieldId, fieldName, fieldType);
@@ -86,6 +87,9 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
     var serviceName = ctx.service;
     var funcName = obj.id.name;
     var funcId = util.format('%s::%s', serviceName, funcName);
+    if (_.includes(this.functions, funcId)) {
+        throw new Error(util.format('function %s already exists', funcId));
+    }
     this.functions.push(funcId);
 
     this.setType(util.format('%s_args', funcId),
@@ -93,13 +97,15 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
 
     var resultFields = [];
     if (obj.ft !== 'void') {
-        resultFields.push(specs.AField(0, 'success', this.parseType(obj.ft)));
+        resultFields.push(specs.AField(0, 'success', this.lookupType(obj.ft)));
     }
+    // TODO: add exceptions in _result struct
     this.setType(util.format('%s_result', funcId),
         specs.AStruct(resultFields));
 };
 
 Spec.prototype.processException = function processException() {
+    // TODO: implement it
     throw new Error('exception is not implemented yet');
 };
 
@@ -111,6 +117,9 @@ Spec.prototype.processStruct = function processStruct(obj) {
 
 Spec.prototype.processService = function processService(obj, ctx) {
     var serviceName = obj.id.name;
+    if (_.includes(this.services, serviceName)) {
+        throw new Error(util.format('service %s already exists', serviceName));
+    }
     ctx.service = serviceName;
     this.services.push(serviceName);
 };
