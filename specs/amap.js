@@ -23,6 +23,7 @@
 var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
+var util = require('util');
 
 function AMap(ktype, vtype) {
     if (!(this instanceof AMap)) {
@@ -35,10 +36,14 @@ function AMap(ktype, vtype) {
 
 AMap.prototype.reify = function reify(tmap) {
     if (this.ktype.typeid !== tmap.ktypeid) {
-        return {};
+        throw new Error(util.format(
+            'AMap::reify expects ktypeid %d; received %d',
+            this.ktype.typeid, tmap.ktypeid));
     }
     if (this.vtype.typeid !== tmap.vtypeid) {
-        return {};
+        throw new Error(util.format(
+            'AMap::reify expects vtypeid %d; received %d',
+            this.vtype.typeid, tmap.vtypeid));
     }
 
     var self = this;

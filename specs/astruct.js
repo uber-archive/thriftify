@@ -24,14 +24,16 @@ var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var assert = require('assert');
+var util = require('util');
 
-function AField(id, name, type) {
+function AField(id, name, type, required) {
     if (!(this instanceof AField)) {
         return new AField(id, name, type);
     }
     this.id = id;
     this.name = name;
     this.type = type;
+    this.required = required || false;
 }
 
 function AStruct(fields) {
@@ -45,26 +47,33 @@ function AStruct(fields) {
 }
 
 AStruct.prototype.reify = function reify(tstruct) {
-    assert(tstruct instanceof thriftrw.TStruct);
     var self = this;
     return _.reduce(tstruct.fields, function reduce(result, tfield) {
         var afield = self.fieldsById[tfield[1]];
-        if (afield && afield.type.typeid === tfield[0]) {
-            result[afield.name] = afield.type.reify(tfield[2]);
+        if (!afield) {
+            return result;
         }
+        if (afield.type.typeid !== tfield[0]) {
+            throw new Error(
+                'AStruct::reify expects field %d typeid %d; received %d',
+                tfield[1], afield.type.typeid, tfield[0]);
+        }
+        result[afield.name] = afield.type.reify(tfield[2]);
         return result;
     }, {});
 };
 
 AStruct.prototype.uglify = function uglify(struct) {
+    assert(_.isPlainObject(struct));
     var self = this;
     return _.reduce(struct, function reduce(tstruct, val, name) {
         var afield = self.fieldsByName[name];
-        if (afield) {
-            var tfield = [afield.type.typeid, afield.id,
-                afield.type.uglify(val)];
-            tstruct.fields.push(tfield);
+        if (!afield) {
+            throw new Error(util.format('unknown field name %s', name));
         }
+        var tfield = [afield.type.typeid, afield.id,
+            afield.type.uglify(val)];
+        tstruct.fields.push(tfield);
         return tstruct;
     }, thriftrw.TStruct());
 };

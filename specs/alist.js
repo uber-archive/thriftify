@@ -23,6 +23,7 @@
 var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
+var util = require('util');
 
 function AList(etype) {
     if (!(this instanceof AList)) {
@@ -34,7 +35,9 @@ function AList(etype) {
 
 AList.prototype.reify = function reify(tlist) {
     if (this.etype.typeid !== tlist.etypeid) {
-        return [];
+        throw new Error(util.format(
+            'AList::reify expects typeid %d; received %d',
+            this.etype.typeid, tlist.etypeid));
     }
     var self = this;
     return _.reduce(tlist.elements, function reduce(list, ele) {
