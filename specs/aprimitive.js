@@ -24,7 +24,7 @@ var assert = require('assert');
 
 function APrimitive(typeid, assertType) {
     if (!(this instanceof APrimitive)) {
-        return new APrimitive(typeid);
+        return new APrimitive(typeid, assertType);
     }
     this.typeid = typeid;
     this.assertType = assertType;
@@ -35,9 +35,7 @@ APrimitive.prototype.reify = function reify(tobj) {
 };
 
 APrimitive.prototype.uglify = function uglify(obj) {
-    if (this.assertType) {
-        assert(typeof obj === this.assertType);
-    }
+    assert.equal(typeof obj, this.assertType);
     return obj;
 };
 

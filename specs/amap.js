@@ -24,13 +24,25 @@ var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
+var assert = require('assert');
+
+var KEY_TYPES = [
+    TYPE.BOOL,
+    TYPE.BYTE,
+    TYPE.I16,
+    TYPE.I32,
+    TYPE.I64,
+    TYPE.STRING
+];
 
 function AMap(ktype, vtype) {
     if (!(this instanceof AMap)) {
         return new AMap(ktype, vtype);
     }
     this.typeid = TYPE.MAP;
+
     this.ktype = ktype;
+    assert(_.includes(KEY_TYPES, ktype.typeid));
     this.vtype = vtype;
 }
 
@@ -56,6 +68,7 @@ AMap.prototype.reify = function reify(tmap) {
 };
 
 AMap.prototype.uglify = function uglify(map) {
+    assert(_.isPlainObject(map));
     var self = this;
     return _.reduce(map, function reduce(tmap, val, key) {
         tmap.pairs.push([self.ktype.uglify(key), self.vtype.uglify(val)]);

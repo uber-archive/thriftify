@@ -24,6 +24,7 @@ var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
+var assert = require('assert');
 
 function AList(etype) {
     if (!(this instanceof AList)) {
@@ -47,6 +48,7 @@ AList.prototype.reify = function reify(tlist) {
 };
 
 AList.prototype.uglify = function uglify(list) {
+    assert(_.isArray(list));
     var self = this;
     return _.reduce(list, function reduce(tlist, ele) {
         tlist.elements.push(self.etype.uglify(ele));
