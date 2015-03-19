@@ -20,4 +20,44 @@
 
 'use strict';
 
-require('../specs/test');
+var specs = require('../');
+var _ = require('lodash');
+var test = require('tape');
+var debug = require('debug')('test');
+
+test('reify and uglify', function t(assert) {
+    _.each([
+        [
+            specs.AStruct([
+                specs.AField(1, 'name', specs.AString)
+            ]),
+            {name: 'lol'}
+        ],
+        [
+            specs.AList(specs.AInt32),
+            [1, 2, 3]
+        ],
+        [
+            specs.AStruct([
+                specs.AField(1, 'a', specs.AString),
+                specs.AField(2, 'b', specs.AInt32),
+                specs.AField(3, 'x', specs.AStruct([
+                    specs.AField(1, 'c', specs.AString),
+                    specs.AField(2, 'd', specs.AString)
+                ]))
+            ]),
+            {a: 'hello', b: 123, x: {c: '[', d: ']'}}
+        ]
+    ], function each(pair) {
+        var spec = pair[0];
+        var val = pair[1];
+
+        var raw = spec.uglify(val);
+        debug('raw', raw);
+        var back = spec.reify(raw);
+        debug('back', back);
+
+        assert.deepEqual(val, back);
+    });
+    assert.end();
+});

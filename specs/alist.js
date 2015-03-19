@@ -20,4 +20,40 @@
 
 'use strict';
 
-require('../specs/test');
+var _ = require('lodash');
+var thriftrw = require('thriftrw');
+var TYPE = thriftrw.TYPE;
+var util = require('util');
+var assert = require('assert');
+
+function AList(etype) {
+    if (!(this instanceof AList)) {
+        return new AList(etype);
+    }
+    this.typeid = TYPE.LIST;
+    this.etype = etype;
+}
+
+AList.prototype.reify = function reify(tlist) {
+    if (this.etype.typeid !== tlist.etypeid) {
+        throw new Error(util.format(
+            'AList::reify expects typeid %d; received %d',
+            this.etype.typeid, tlist.etypeid));
+    }
+    var self = this;
+    return _.reduce(tlist.elements, function reduce(list, ele) {
+        list.push(self.etype.reify(ele));
+        return list;
+    }, []);
+};
+
+AList.prototype.uglify = function uglify(list) {
+    assert(_.isArray(list));
+    var self = this;
+    return _.reduce(list, function reduce(tlist, ele) {
+        tlist.elements.push(self.etype.uglify(ele));
+        return tlist;
+    }, thriftrw.TList(this.etype.typeid));
+};
+
+module.exports.AList = AList;

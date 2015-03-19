@@ -20,4 +20,22 @@
 
 'use strict';
 
-require('../specs/test');
+var PEG = require('pegjs');
+var fs = require('fs');
+var path = require('path');
+
+function newGrammar() {
+    var grammarPath = path.join(__dirname, 'thrift-idl.pegjs');
+    var grammar = PEG.buildParser(fs.readFileSync(grammarPath).toString());
+    return grammar;
+}
+
+function parse(thriftFile, grammar) {
+    if (!grammar) {
+        grammar = newGrammar();
+    }
+    return grammar.parse(fs.readFileSync(thriftFile).toString());
+}
+
+module.exports.newGrammar = newGrammar;
+module.exports.parse = parse;

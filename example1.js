@@ -20,4 +20,14 @@
 
 'use strict';
 
-require('../specs/test');
+var thriftify = require('./');
+var debug = require('debug')('test');
+
+var spec = thriftify.newSpec('example1.thrift');
+debug('spec', spec.getType('Simple1'));
+
+var buf = thriftify.toBuffer({int1: 123}, spec, 'Simple1');
+debug('buf', buf);
+
+var obj = thriftify.fromBuffer(buf, spec, 'Simple1');
+debug('obj', obj);

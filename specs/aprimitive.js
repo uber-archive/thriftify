@@ -20,4 +20,23 @@
 
 'use strict';
 
-require('../specs/test');
+var assert = require('assert');
+
+function APrimitive(typeid, assertType) {
+    if (!(this instanceof APrimitive)) {
+        return new APrimitive(typeid, assertType);
+    }
+    this.typeid = typeid;
+    this.assertType = assertType;
+}
+
+APrimitive.prototype.reify = function reify(tobj) {
+    return tobj;
+};
+
+APrimitive.prototype.uglify = function uglify(obj) {
+    assert.equal(typeof obj, this.assertType);
+    return obj;
+};
+
+module.exports.APrimitive = APrimitive;
