@@ -19,7 +19,7 @@
   "dependencies": {
     "pegjs": "^0.8.0",
     "lodash": "^3.5.0",
-    "thriftrw": "git+ssh://gitolite@code.uber.internal:github/uber/thriftrw",
+    "thriftrw": "git+ssh://gitolite@code.uber.internal:github/uber/thriftrw#v1.0.0-alpha1",
     "bufrw": "^0.9.4",
     "debug": "^2.1.3"
   },
