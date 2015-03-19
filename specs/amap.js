@@ -27,7 +27,6 @@ var util = require('util');
 var assert = require('assert');
 
 var KEY_TYPES = [
-    TYPE.BOOL,
     TYPE.BYTE,
     TYPE.I16,
     TYPE.I32,
