@@ -33,6 +33,7 @@ function AField(id, name, type, required) {
     this.id = id;
     this.name = name;
     this.type = type;
+    // TODO: handle required
     this.required = required || false;
 }
 
@@ -71,8 +72,7 @@ AStruct.prototype.uglify = function uglify(struct) {
         if (!afield) {
             throw new Error(util.format('unknown field name %s', name));
         }
-        var tfield = [afield.type.typeid, afield.id,
-            afield.type.uglify(val)];
+        var tfield = [afield.type.typeid, afield.id, afield.type.uglify(val)];
         tstruct.fields.push(tfield);
         return tstruct;
     }, thriftrw.TStruct());
