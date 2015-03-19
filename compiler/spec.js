@@ -43,14 +43,14 @@ function Spec() {
 Spec.prototype.getType = function getType(name) {
     var type = this.types[name];
     if (!type) {
-        throw new Error('type not found');
+        throw new Error(util.format('type %s not found', name));
     }
     return type;
 };
 
 Spec.prototype.setType = function setType(name, type) {
     if (this.types[name]) {
-        throw new Error('type already exists');
+        throw new Error(util.format('type %s already exists', name));
     }
     this.types[name] = type;
 };
@@ -87,7 +87,8 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
     var funcName = obj.id.name;
 
     if (_.includes(this.servicesAndFunctions[serviceName], serviceName)) {
-        throw new Error(util.format('service %s function %s already exists', serviceName, funcName));
+        throw new Error(util.format(
+            'service %s function %s already exists', serviceName, funcName));
     }
     this.servicesAndFunctions[serviceName].push(funcName);
 
