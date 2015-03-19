@@ -37,8 +37,7 @@ var BUILTIN_TYPES = {
 
 function Spec() {
     this.types = _.clone(BUILTIN_TYPES);
-    this.services = [];
-    this.functions = [];
+    this.servicesAndFunctions = {};
 }
 
 Spec.prototype.getType = function getType(name) {
@@ -86,13 +85,14 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
 
     var serviceName = ctx.service;
     var funcName = obj.id.name;
-    var funcId = util.format('%s::%s', serviceName, funcName);
-    if (_.includes(this.functions, funcId)) {
-        throw new Error(util.format('function %s already exists', funcId));
-    }
-    this.functions.push(funcId);
 
-    this.setType(util.format('%s_args', funcId),
+    if (_.includes(this.servicesAndFunctions[serviceName], serviceName)) {
+        throw new Error(util.format('service %s function %s already exists', serviceName, funcName));
+    }
+    this.servicesAndFunctions[serviceName].push(funcName);
+
+    var typePrefix = util.format('%s::%s', serviceName, funcName);
+    this.setType(util.format('%s_args', typePrefix),
         specs.AStruct(_.map(obj.fields, this.parseField.bind(this))));
 
     var resultFields = [];
@@ -100,7 +100,7 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
         resultFields.push(specs.AField(0, 'success', this.lookupType(obj.ft)));
     }
     // TODO: add exceptions in _result struct
-    this.setType(util.format('%s_result', funcId),
+    this.setType(util.format('%s_result', typePrefix),
         specs.AStruct(resultFields));
 };
 
@@ -117,11 +117,11 @@ Spec.prototype.processStruct = function processStruct(obj) {
 
 Spec.prototype.processService = function processService(obj, ctx) {
     var serviceName = obj.id.name;
-    if (_.includes(this.services, serviceName)) {
+    if (_.has(this.servicesAndFunctions, serviceName)) {
         throw new Error(util.format('service %s already exists', serviceName));
     }
     ctx.service = serviceName;
-    this.services.push(serviceName);
+    this.servicesAndFunctions[serviceName] = [];
 };
 
 Spec.prototype.process = function process(obj, ctx) {
