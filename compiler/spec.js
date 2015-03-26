@@ -105,11 +105,6 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
         specs.AStruct(resultFields));
 };
 
-Spec.prototype.processException = function processException() {
-    // TODO: implement it
-    throw new Error('exception is not implemented yet');
-};
-
 Spec.prototype.processStruct = function processStruct(obj) {
     var astruct = specs.AStruct(_.map(obj.fields, this.parseField.bind(this)));
     var name = obj.id.name;
@@ -131,7 +126,7 @@ Spec.prototype.process = function process(obj, ctx) {
     } else if (obj.type === 'function') {
         this.processFunction(obj, ctx);
     } else if (obj.type === 'Exception') {
-        this.processException(obj, ctx);
+        this.processStruct(obj, ctx);
     } else if (obj.type === 'Struct') {
         this.processStruct(obj, ctx);
     }
