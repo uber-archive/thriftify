@@ -79,10 +79,7 @@ Spec.prototype.parseField = function parseField(f) {
 };
 
 Spec.prototype.processFunction = function processFunction(obj, ctx) {
-    if (obj.throws) {
-        throw new Error('throws is not implemented yet');
-    }
-
+    var self = this;
     var serviceName = ctx.service;
     var funcName = obj.id.name;
 
@@ -100,6 +97,10 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
     if (obj.ft !== 'void') {
         resultFields.push(specs.AField(0, 'success', this.lookupType(obj.ft)));
     }
+    _.each(obj.throws, function(i) {
+        resultFields.push(self.parseField(i));
+    });
+
     // TODO: add exceptions in _result struct
     this.setType(util.format('%s_result', typePrefix),
         specs.AStruct(resultFields));
