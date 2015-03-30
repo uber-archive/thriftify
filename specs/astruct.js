@@ -57,9 +57,9 @@ AStruct.prototype.reify = function reify(tstruct) {
             return result;
         }
         if (afield.type.typeid !== tfield[0]) {
-            throw new Error(
+            throw new Error(util.format(
                 'AStruct::reify expects field %d typeid %d; received %d',
-                tfield[1], afield.type.typeid, tfield[0]);
+                tfield[1], afield.type.typeid, tfield[0]));
         }
         result[afield.name] = afield.type.reify(tfield[2]);
         return result;
@@ -74,7 +74,13 @@ AStruct.prototype.uglify = function uglify(struct) {
         if (!afield) {
             throw new Error(util.format('unknown field name %s', name));
         }
-        var tfield = [afield.type.typeid, afield.id, afield.type.uglify(val)];
+        try {
+            var tfield = [afield.type.typeid, afield.id, afield.type.uglify(val)];
+        } catch (e) {
+            throw new Error(util.format(
+                'AStruct: failed to uglify field %d typeid %d val %s innerError %s',
+                afield.id, afield.type.typeid, util.inspect(val), e.message));
+        }
         tstruct.fields.push(tfield);
         return tstruct;
     }, thriftrw.TStruct());
