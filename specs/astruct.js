@@ -26,7 +26,7 @@ var TYPE = thriftrw.TYPE;
 var assert = require('assert');
 var util = require('util');
 
-function AField(id, name, type, required) {
+function AField(id, name, type, required, defaultValue) {
     if (!(this instanceof AField)) {
         return new AField(id, name, type);
     }
@@ -35,6 +35,8 @@ function AField(id, name, type, required) {
     this.type = type;
     // TODO: handle required
     this.required = required || false;
+    // TODO: handle defaultValue
+    this.defaultValue = defaultValue || null;
 }
 
 function AStruct(fields) {
