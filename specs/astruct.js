@@ -70,6 +70,9 @@ AStruct.prototype.uglify = function uglify(struct) {
     assert(_.isPlainObject(struct));
     var self = this;
     return _.reduce(struct, function reduce(tstruct, val, name) {
+        if (_.isUndefined(val) || _.isNull(val)) {
+            return tstruct;
+        }
         var afield = self.fieldsByName[name];
         if (!afield) {
             throw new Error(util.format('unknown field name %s', name));
