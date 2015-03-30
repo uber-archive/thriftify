@@ -57,7 +57,7 @@ function toBufferSafe(obj, spec, typename, cb) {
     cb(null, buf);
 }
 
-function newSpec(specFile) {
+function readSpecSync(specFile) {
     var source = grammarParse(specFile);
     var spec = new Spec();
     spec.walk(source);
@@ -68,4 +68,5 @@ module.exports.fromBuffer = fromBuffer;
 module.exports.fromBufferSafe = fromBufferSafe;
 module.exports.toBuffer = toBuffer;
 module.exports.toBufferSafe = toBufferSafe;
-module.exports.newSpec = newSpec;
+module.exports.newSpec = readSpecSync; // XXX deprecated
+module.exports.readSpecSync = readSpecSync;
