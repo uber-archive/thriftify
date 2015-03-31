@@ -24,15 +24,6 @@ var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
-var assert = require('assert');
-
-var KEY_TYPES = [
-    TYPE.BYTE,
-    TYPE.I16,
-    TYPE.I32,
-    TYPE.I64,
-    TYPE.STRING
-];
 
 function AMap(ktype, vtype) {
     if (!(this instanceof AMap)) {
@@ -40,34 +31,37 @@ function AMap(ktype, vtype) {
     }
     this.typeid = TYPE.MAP;
 
+    if (ktype !== TYPE.STRING) {
+        throw new Error('key type has to be TYPE.STRING; received %d', ktype);
+    }
     this.ktype = ktype;
-    assert(_.includes(KEY_TYPES, ktype.typeid));
     this.vtype = vtype;
 }
 
 AMap.prototype.reify = function reify(tmap) {
     if (this.ktype.typeid !== tmap.ktypeid) {
-        throw new Error(util.format(
-            'AMap::reify expects ktypeid %d; received %d',
+        throw new Error(util.format('AMap::reify expects ktypeid %d; received %d',
             this.ktype.typeid, tmap.ktypeid));
     }
     if (this.vtype.typeid !== tmap.vtypeid) {
-        throw new Error(util.format(
-            'AMap::reify expects vtypeid %d; received %d',
+        throw new Error(util.format('AMap::reify expects vtypeid %d; received %d',
             this.vtype.typeid, tmap.vtypeid));
     }
 
     var self = this;
     return _.reduce(tmap.pairs, function reduce(map, pair) {
-        var key = self.ktype.reify(pair[0]);
-        var val = self.vtype.reify(pair[1]);
+        var key = self.ktype.reify(pair.key);
+        var val = self.vtype.reify(pair.val);
         map[key] = val;
         return map;
     }, {});
 };
 
 AMap.prototype.uglify = function uglify(map) {
-    assert(_.isPlainObject(map));
+    if (!_.isPlainObject(map)) {
+        throw new Error(util.format('AMap::uglify expects a plain object; received type %s %s val %s',
+            typeof map, map.constructor.name, util.inspect(map)));
+    }
     var self = this;
     return _.reduce(map, function reduce(tmap, val, key) {
         tmap.pairs.push([self.ktype.uglify(key), self.vtype.uglify(val)]);

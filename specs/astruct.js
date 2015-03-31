@@ -23,30 +23,32 @@
 var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
-var assert = require('assert');
 var util = require('util');
 
-function AField(id, name, type, required, defaultValue) {
+function AField(opts) {
     if (!(this instanceof AField)) {
-        return new AField(id, name, type);
+        return new AField(opts);
     }
-    this.id = id;
-    this.name = name;
-    this.type = type;
-    // TODO: handle required
-    this.required = required || false;
+    opts = opts || {};
+    this.id = opts.id;
+    this.name = opts.name;
+    this.type = opts.type;
+    this.required = opts.required || false;
     // TODO: handle defaultValue
-    this.defaultValue = defaultValue || null;
+    this.defaultValue = opts.defaultValue || null;
 }
 
-function AStruct(fields) {
+function AStruct(opts) {
     if (!(this instanceof AStruct)) {
-        return new AStruct(fields);
+        return new AStruct(opts);
     }
     this.typeid = TYPE.STRUCT;
-    this.fields = fields || [];
-    this.fieldsById = _.indexBy(fields, 'id');
-    this.fieldsByName = _.indexBy(fields, 'name');
+
+    opts = opts || {};
+    this.name = opts.name || null;
+    this.fields = opts.fields || [];
+    this.fieldsById = _.indexBy(this.fields, 'id');
+    this.fieldsByName = _.indexBy(this.fields, 'name');
 }
 
 AStruct.prototype.reify = function reify(tstruct) {
@@ -66,23 +68,39 @@ AStruct.prototype.reify = function reify(tstruct) {
     }, {});
 };
 
+function isNone(obj) {
+    return _.isNull(obj) || _.isUndefined(obj);
+}
+
 AStruct.prototype.uglify = function uglify(struct) {
-    assert(_.isPlainObject(struct));
+    if (!_.isPlainObject(struct)) {
+        throw new Error(util.format('typename %s; expects plain object; received type %s constructor %s val %s',
+            this.name, typeof struct, struct.constructor.name, util.inspect(struct)));
+    }
     var self = this;
-    return _.reduce(struct, function reduce(tstruct, val, name) {
-        if (_.isUndefined(val) || _.isNull(val)) {
+    // required fields
+    _.each(this.fieldsByName, function(field) {
+        if (field.required && isNone(struct[field.name])) {
+            throw new Error(util.format('typename %s; missing required field %s',
+                self.name, field.name));
+        }
+    });
+    // uglify each field
+    return _.reduce(struct, function(tstruct, val, name) {
+        // ignore undefined and null fields because thrift doesn't allow null value
+        if (isNone(val)) {
             return tstruct;
         }
+
         var afield = self.fieldsByName[name];
         if (!afield) {
-            throw new Error(util.format('unknown field name %s', name));
+            throw new Error(util.format('typename %s; unknown field %s', self.name, name));
         }
         try {
             var tfield = [afield.type.typeid, afield.id, afield.type.uglify(val)];
         } catch (e) {
-            throw new Error(util.format(
-                'AStruct: failed to uglify field %d typeid %d val %s innerError %s',
-                afield.id, afield.type.typeid, util.inspect(val), e.message));
+            throw new Error(util.format('typename %s; failed to uglify field name %s id %d typeid %d val %s',
+                self.name, name, afield.id, afield.type.typeid, util.inspect(val)));
         }
         tstruct.fields.push(tfield);
         return tstruct;

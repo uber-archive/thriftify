@@ -28,9 +28,11 @@ var debug = require('debug')('test');
 test('reify and uglify', function t(assert) {
     _.each([
         [
-            specs.AStruct([
-                specs.AField(1, 'name', specs.AString)
-            ]),
+            specs.AStruct({
+                fields: [
+                    specs.AField({id: 1, name: 'name', type: specs.AString})
+                ]
+            }),
             {name: 'lol'}
         ],
         [
@@ -38,14 +40,22 @@ test('reify and uglify', function t(assert) {
             [1, 2, 3]
         ],
         [
-            specs.AStruct([
-                specs.AField(1, 'a', specs.AString),
-                specs.AField(2, 'b', specs.AInt32),
-                specs.AField(3, 'x', specs.AStruct([
-                    specs.AField(1, 'c', specs.AString),
-                    specs.AField(2, 'd', specs.AString)
-                ]))
-            ]),
+            specs.AStruct({
+                fields: [
+                    specs.AField({id: 1, name: 'a', type: specs.AString}),
+                    specs.AField({id: 2, name: 'b', type: specs.AInt32}),
+                    specs.AField({
+                        id: 3,
+                        name: 'x',
+                        type: specs.AStruct({
+                            fields: [
+                                specs.AField({id: 1, name: 'c', type: specs.AString}),
+                                specs.AField({id: 2, name: 'd', type: specs.AString})
+                            ]
+                        })
+                    })
+                ]
+            }),
             {a: 'hello', b: 123, x: {c: '[', d: ']'}}
         ]
     ], function each(pair) {

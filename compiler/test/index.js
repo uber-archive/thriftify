@@ -1,3 +1,4 @@
 var t = require('../../');
-var spec = t.newSpec('demo.thrift');
-console.log('spec', spec);
+var path = require('path');
+var spec = t.newSpec(path.join(__dirname, 'demo.thrift'));
+//console.log('spec', spec);

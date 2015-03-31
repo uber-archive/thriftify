@@ -221,13 +221,14 @@ throwz
   }
 
 Field
-  = _ fid:FieldIdentifier FieldRequiredness? ft:FieldType id:Identifier FieldValue?
+  = _ fid:FieldIdentifier req:FieldRequiredness? ft:FieldType id:Identifier FieldValue?
     XsdFieldOptions? ListSeparator? {
       return {
         type: 'Field',
         fieldType: ft,
         id: id,
-        fid: fid
+        fid: fid,
+        req: req
       }
     }
 
@@ -235,8 +236,8 @@ FieldIdentifier
   = fid:IntConstant ':' _ { return fid.value; }
 
 FieldRequiredness
-  = 'required' __
-  / 'optional' __
+  = 'required' __ { return 'required'; }
+  / 'optional' __ { return 'optional'; }
 
 FieldValue
   = '=' __ ConstValue __
