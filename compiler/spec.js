@@ -26,8 +26,9 @@ var assert = require('assert');
 var specs = require('../specs');
 
 var BUILTIN_TYPES = {
+    'binary': specs.ABinary,
     'string': specs.AString,
-    'bool': specs.ABool,
+    'bool': specs.ABoolean,
     'byte': specs.AByte,
     'i16': specs.AInt16,
     'i32': specs.AInt32,
