@@ -24,7 +24,6 @@ var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
-var assert = require('assert');
 
 function AList(etype) {
     if (!(this instanceof AList)) {
@@ -36,8 +35,7 @@ function AList(etype) {
 
 AList.prototype.reify = function reify(tlist) {
     if (this.etype.typeid !== tlist.etypeid) {
-        throw new Error(util.format(
-            'AList::reify expects typeid %d; received %d',
+        throw new Error(util.format('AList::reify expects typeid %d; received %d',
             this.etype.typeid, tlist.etypeid));
     }
     var self = this;
@@ -48,7 +46,10 @@ AList.prototype.reify = function reify(tlist) {
 };
 
 AList.prototype.uglify = function uglify(list) {
-    assert(_.isArray(list));
+    if (!_.isArray(list)) {
+        throw new Error('AList::uglify expects an array; received type %s %s val %s',
+            typeof list, list.constructor.name, util.inspect(list));
+    }
     var self = this;
     return _.reduce(list, function reduce(tlist, ele) {
         tlist.elements.push(self.etype.uglify(ele));

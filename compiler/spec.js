@@ -97,9 +97,11 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
     if (obj.ft !== 'void') {
         resultFields.push(specs.AField(0, 'success', this.lookupType(obj.ft)));
     }
-    _.each(obj.throws, function(i) {
-        resultFields.push(self.parseField(i));
-    });
+    if (obj.throws) {
+        _.each(obj.throws.fields, function(i) {
+            resultFields.push(self.parseField(i));
+        });
+    }
 
     // TODO: add exceptions in _result struct
     this.setType(util.format('%s_result', typePrefix),

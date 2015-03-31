@@ -23,14 +23,18 @@
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 
-var APrimitive = require('./aprimitive').APrimitive;
-module.exports.ABool = APrimitive(TYPE.BOOL, 'boolean');
-module.exports.AByte = APrimitive(TYPE.BYTE, 'number');
-module.exports.ADouble = APrimitive(TYPE.DOUBLE, 'number');
-module.exports.AInt16 = APrimitive(TYPE.I16, 'number');
-module.exports.AInt32 = APrimitive(TYPE.I32, 'number');
-module.exports.AInt64 = APrimitive(TYPE.I64, 'number');
-module.exports.AString = APrimitive(TYPE.STRING, 'string');
+module.exports.ABoolean = require('./aboolean').ABoolean();
+
+var ANumber = require('./anumber').ANumber;
+module.exports.AByte = ANumber(TYPE.BYTE);
+module.exports.ADouble = ANumber(TYPE.DOUBLE);
+module.exports.AInt16 = ANumber(TYPE.I16);
+module.exports.AInt32 = ANumber(TYPE.I32);
+
+module.exports.AInt64 = require('./aint64').AInt64();
+
+module.exports.AString = require('./astring').AString();
+module.exports.ABinary = require('./abinary').ABinary();
 
 module.exports.AMap = require('./amap').AMap;
 module.exports.AList = require('./alist').AList;
