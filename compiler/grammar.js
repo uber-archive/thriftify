@@ -24,18 +24,28 @@ var PEG = require('pegjs');
 var fs = require('fs');
 var path = require('path');
 
-function newGrammar() {
-    var grammarPath = path.join(__dirname, 'thrift-idl.pegjs');
-    var grammar = PEG.buildParser(fs.readFileSync(grammarPath).toString());
-    return grammar;
+var grammarPath = path.join(__dirname, 'thrift-idl.pegjs');
+var grammar = PEG.buildParser(fs.readFileSync(grammarPath).toString('ascii'));
+
+function parse(source) {
+    return grammar.parse(source);
 }
 
-function parse(thriftFile, grammar) {
-    if (!grammar) {
-        grammar = newGrammar();
+function parseFile(thriftFile, callback) {
+    fs.readFile(thriftFile, handleContent);
+    function handleContent(err, source) {
+        if (err) {
+            return callback(err);
+        }
+        callback(null, parse(source.toString('utf8')));
     }
-    return grammar.parse(fs.readFileSync(thriftFile).toString());
 }
 
-module.exports.newGrammar = newGrammar;
+function parseFileSync(thriftFile) {
+    var source = fs.readFileSync(thriftFile).toString('utf8');
+    return grammar.parse(source);
+}
+
 module.exports.parse = parse;
+module.exports.parseFile = parseFile;
+module.exports.parseFileSync = parseFileSync;

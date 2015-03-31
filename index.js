@@ -21,7 +21,7 @@
 'use strict';
 
 var Spec = require('./compiler/spec');
-var grammarParse = require('./compiler/grammar').parse;
+var grammar = require('./compiler/grammar');
 var thriftrw = require('thriftrw');
 var bufrw = require('bufrw');
 
@@ -33,8 +33,9 @@ function fromBuffer(buffer, spec, typename) {
 }
 
 function fromBufferSafe(buffer, spec, typename, cb) {
+    var obj;
     try {
-        var obj = fromBuffer(buffer, spec, typename);
+        obj = fromBuffer(buffer, spec, typename);
     } catch (e) {
         return cb(e);
     }
@@ -49,24 +50,48 @@ function toBuffer(obj, spec, typename) {
 }
 
 function toBufferSafe(obj, spec, typename, cb) {
+    var buf;
     try {
-        var buf = toBuffer(obj, spec, typename);
+        buf = toBuffer(obj, spec, typename);
     } catch (e) {
         return cb(e);
     }
     cb(null, buf);
 }
 
-function readSpecSync(specFile) {
-    var source = grammarParse(specFile);
+function createSpec(syntax) {
     var spec = new Spec();
-    spec.walk(source);
+    spec.walk(syntax);
     return spec;
+}
+
+function parseSpec(source) {
+    var syntax = grammar.parse(source);
+    return createSpec(syntax);
+}
+
+function readSpecSync(specFile) {
+    var syntax = grammar.parseFileSync(specFile);
+    return createSpec(syntax);
+}
+
+function readSpec(specFile, callback) {
+    grammar.parseFile(specFile, handleSource);
+    function handleSource(err, syntax) {
+        if (err) {
+            return callback(err);
+        }
+        var spec = createSpec(syntax);
+        callback(null, spec);
+    }
 }
 
 module.exports.fromBuffer = fromBuffer;
 module.exports.fromBufferSafe = fromBufferSafe;
 module.exports.toBuffer = toBuffer;
 module.exports.toBufferSafe = toBufferSafe;
-module.exports.newSpec = readSpecSync; // XXX deprecated
 module.exports.readSpecSync = readSpecSync;
+module.exports.readSpec = readSpec;
+module.exports.parseSpec = parseSpec;
+
+module.exports.newSpec = readSpecSync; // XXX deprecated
