@@ -51,6 +51,9 @@ AMap.prototype.reify = function reify(tmap) {
     var self = this;
     return _.reduce(tmap.pairs, function reduce(map, pair) {
         var key = self.ktype.reify(pair.key);
+        if (_.has(map, key)) {
+            throw new Error(util.format('duplicate key %s', key));
+        }
         var val = self.vtype.reify(pair.val);
         map[key] = val;
         return map;
