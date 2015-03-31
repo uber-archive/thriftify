@@ -22,6 +22,7 @@
 
 var _ = require('lodash');
 var thriftrw = require('thriftrw');
+var TField = thriftrw.TField;
 var TYPE = thriftrw.TYPE;
 var util = require('util');
 
@@ -44,9 +45,11 @@ function AStruct(opts) {
     }
     this.typeid = TYPE.STRUCT;
 
-    opts = opts || {};
+    if (_.isUndefined(opts.fields)) {
+        throw new Error('AStruct requires fields');
+    }
     this.name = opts.name || null;
-    this.fields = opts.fields || [];
+    this.fields = opts.fields;
     this.fieldsById = _.indexBy(this.fields, 'id');
     this.fieldsByName = _.indexBy(this.fields, 'name');
 }
@@ -54,16 +57,16 @@ function AStruct(opts) {
 AStruct.prototype.reify = function reify(tstruct) {
     var self = this;
     return _.reduce(tstruct.fields, function reduce(result, tfield) {
-        var afield = self.fieldsById[tfield[1]];
+        var afield = self.fieldsById[tfield.id];
         if (!afield) {
             return result;
         }
-        if (afield.type.typeid !== tfield[0]) {
+        if (afield.type.typeid !== tfield.typeid) {
             throw new Error(util.format(
                 'AStruct::reify expects field %d typeid %d; received %d',
-                tfield[1], afield.type.typeid, tfield[0]));
+                tfield.id, afield.type.typeid, tfield.typeid));
         }
-        result[afield.name] = afield.type.reify(tfield[2]);
+        result[afield.name] = afield.type.reify(tfield.val);
         return result;
     }, {});
 };
@@ -97,7 +100,7 @@ AStruct.prototype.uglify = function uglify(struct) {
             throw new Error(util.format('typename %s; unknown field %s', self.name, name));
         }
         try {
-            var tfield = [afield.type.typeid, afield.id, afield.type.uglify(val)];
+            var tfield = TField(afield.type.typeid, afield.id, afield.type.uglify(val));
         } catch (e) {
             throw new Error(util.format('typename %s; failed to uglify field name %s id %d typeid %d val %s',
                 self.name, name, afield.id, afield.type.typeid, util.inspect(val)));

@@ -24,6 +24,7 @@ var specs = require('../');
 var _ = require('lodash');
 var test = require('tape');
 var debug = require('debug')('test');
+var util = require('util');
 
 test('reify and uglify', function t(assert) {
     _.each([
@@ -63,9 +64,9 @@ test('reify and uglify', function t(assert) {
         var val = pair[1];
 
         var raw = spec.uglify(val);
-        debug('raw', raw);
+        debug('raw', util.inspect(raw, {colors:true, depth:999}));
         var back = spec.reify(raw);
-        debug('back', back);
+        debug('back', util.inspect(back, {colors:true, depth:999}));
 
         assert.deepEqual(val, back);
     });
