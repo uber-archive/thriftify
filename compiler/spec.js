@@ -76,7 +76,11 @@ Spec.prototype.parseField = function parseField(f) {
     var fieldType = this.lookupType(f.fieldType);
     var fieldId = f.fid;
 
-    return specs.AField(fieldId, fieldName, fieldType);
+    return specs.AField({
+        id: fieldId,
+        name: fieldName,
+        type: fieldType
+    });
 };
 
 Spec.prototype.processFunction = function processFunction(obj, ctx) {
@@ -91,12 +95,21 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
     this.servicesAndFunctions[serviceName].push(funcName);
 
     var typePrefix = util.format('%s::%s', serviceName, funcName);
-    this.setType(util.format('%s_args', typePrefix),
-        specs.AStruct(_.map(obj.fields, this.parseField.bind(this))));
+    this.setType(
+        util.format('%s_args', typePrefix),
+        specs.AStruct({
+            name: null,
+            fields: _.map(obj.fields, this.parseField.bind(this))
+        })
+    );
 
     var resultFields = [];
     if (obj.ft !== 'void') {
-        resultFields.push(specs.AField(0, 'success', this.lookupType(obj.ft)));
+        resultFields.push(specs.AField({
+            id: 0,
+            name: 'success',
+            type: this.lookupType(obj.ft)
+        }));
     }
     if (obj.throws) {
         _.each(obj.throws.fields, function(i) {
@@ -106,12 +119,15 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
 
     // TODO: add exceptions in _result struct
     this.setType(util.format('%s_result', typePrefix),
-        specs.AStruct(resultFields));
+        specs.AStruct({name: null, fields: resultFields}));
 };
 
 Spec.prototype.processStruct = function processStruct(obj) {
-    var astruct = specs.AStruct(_.map(obj.fields, this.parseField.bind(this)));
     var name = obj.id.name;
+    var astruct = specs.AStruct({
+        name: name,
+        fields: _.map(obj.fields, this.parseField.bind(this))
+    });
     this.setType(name, astruct);
 };
 
