@@ -21,3 +21,4 @@
 'use strict';
 
 require('../specs/test');
+require('./enum');
