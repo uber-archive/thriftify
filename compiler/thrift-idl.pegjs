@@ -95,13 +95,12 @@ Enum
   }
 
 EnumDefinition
-  = id:Identifier value:('=' __ v:IntConstant { return v })? ListSeparator? {
+  = id:Identifier value:('=' __ v:IntConstant { return v.value })? __ ListSeparator? __ {
     var ret = {
       type: 'EnumDefinition',
       id: id,
       value: value
     };
-    if (value) { ret.value = value; }
     return ret;
   }
 

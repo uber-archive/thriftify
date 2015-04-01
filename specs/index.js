@@ -40,3 +40,4 @@ module.exports.AMap = require('./amap').AMap;
 module.exports.AList = require('./alist').AList;
 module.exports.AField = require('./astruct').AField;
 module.exports.AStruct = require('./astruct').AStruct;
+module.exports.AEnum = require('./aenum').AEnum;
