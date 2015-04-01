@@ -102,8 +102,8 @@ AStruct.prototype.uglify = function uglify(struct) {
         try {
             var tfield = TField(afield.type.typeid, afield.id, afield.type.uglify(val));
         } catch (e) {
-            throw new Error(util.format('typename %s; failed to uglify field name %s id %d typeid %d val %s',
-                self.name, name, afield.id, afield.type.typeid, util.inspect(val)));
+            throw new Error(util.format('typename %s; failed to uglify field name %s id %d typeid %d val %s; inner error %s',
+                self.name, name, afield.id, afield.type.typeid, util.inspect(val), e.message));
         }
         tstruct.fields.push(tfield);
         return tstruct;
