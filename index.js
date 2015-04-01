@@ -61,7 +61,7 @@ function toBufferSafe(obj, spec, typename, cb) {
 
 function createSpec(syntax) {
     var spec = new Spec();
-    spec.walk(syntax);
+    spec.processProgram(syntax);
     return spec;
 }
 
