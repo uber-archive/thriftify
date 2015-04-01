@@ -22,8 +22,8 @@
 
 var util = require('util');
 var _ = require('lodash');
-var assert = require('assert');
 var specs = require('../specs');
+var debug = require('debug')('compiler');
 
 var BUILTIN_TYPES = {
     'binary': specs.ABinary,
@@ -79,27 +79,38 @@ Spec.prototype.parseField = function parseField(f) {
     return specs.AField({id: fieldId, name: fieldName, type: fieldType});
 };
 
-Spec.prototype.processFunction = function processFunction(obj, ctx) {
+Spec.prototype.processStruct = function processStruct(s) {
+    debug('enter struct', s);
+    var astruct = specs.AStruct({fields: _.map(s.fields, this.parseField.bind(this))});
+    var name = s.id.name;
+    this.setType(name, astruct);
+};
+
+Spec.prototype.processFunction = function processFunction(func, opts) {
+    debug('enter function', func);
     var self = this;
-    var serviceName = ctx.service;
-    var funcName = obj.id.name;
+    var funcName = func.id.name;
 
-    if (_.includes(this.servicesAndFunctions[serviceName], serviceName)) {
-        throw new Error(util.format(
-            'service %s function %s already exists', serviceName, funcName));
+    if (_.includes(opts.functions, funcName)) {
+        throw new Error(util.format('service %s function %s already exists', opts.serviceName, funcName));
     }
-    this.servicesAndFunctions[serviceName].push(funcName);
+    opts.functions.push(funcName);
 
-    var typePrefix = util.format('%s::%s', serviceName, funcName);
-    this.setType(util.format('%s_args', typePrefix),
-        specs.AStruct({fields: _.map(obj.fields, this.parseField.bind(this))}));
+    var typePrefix = util.format('%s::%s', opts.serviceName, funcName);
+    this.setType(
+        util.format('%s_args', typePrefix),
+        specs.AStruct({
+            fields: _.map(func.fields, this.parseField.bind(this))
+        }));
 
     var resultFields = [];
-    if (obj.ft !== 'void') {
-        resultFields.push(specs.AField({id: 0, name: 'success', type: this.lookupType(obj.ft)}));
+    if (func.ft !== 'void') {
+        resultFields.push(
+            specs.AField({id: 0, name: 'success', type: this.lookupType(func.ft)})
+        );
     }
-    if (obj.throws) {
-        _.each(obj.throws.fields, function(i) {
+    if (func.throws) {
+        _.each(func.throws.fields, function(i) {
             resultFields.push(self.parseField(i));
         });
     }
@@ -109,54 +120,51 @@ Spec.prototype.processFunction = function processFunction(obj, ctx) {
         specs.AStruct({fields: resultFields}));
 };
 
-Spec.prototype.processStruct = function processStruct(obj) {
-    var astruct = specs.AStruct({fields: _.map(obj.fields, this.parseField.bind(this))});
-    var name = obj.id.name;
-    this.setType(name, astruct);
-};
-
-Spec.prototype.processService = function processService(obj, ctx) {
-    var serviceName = obj.id.name;
-    if (_.has(this.servicesAndFunctions, serviceName)) {
-        throw new Error(util.format('service %s already exists', serviceName));
-    }
-    ctx.service = serviceName;
-    this.servicesAndFunctions[serviceName] = [];
-};
-
-Spec.prototype.processEnum = function processEnum(obj, ctx) {
-    var name = obj.id.name;
-    var entity = new specs.AEnum(obj.enumDefinitions);
+Spec.prototype.processEnum = function processEnum(e) {
+    var name = e.id.name;
+    var entity = new specs.AEnum(e.enumDefinitions);
     this.setType(name, entity);
 };
 
-Spec.prototype.process = function process(obj, ctx) {
-    if (obj.type === 'Service') {
-        this.processService(obj, ctx);
-    } else if (obj.type === 'function') {
-        this.processFunction(obj, ctx);
-    } else if (obj.type === 'Exception') {
-        this.processStruct(obj, ctx);
-    } else if (obj.type === 'Struct') {
-        this.processStruct(obj, ctx);
-    } else if (obj.type === 'Enum') {
-        this.processEnum(obj, ctx);
+Spec.prototype.processService = function processService(svc) {
+    debug('enter service', svc);
+    var serviceName = svc.id.name;
+    if (_.has(this.servicesAndFunctions, serviceName)) {
+        throw new Error(util.format('service %s already exists', serviceName));
     }
-};
-
-Spec.prototype.walk = function walk(obj, ctx) {
-    assert(typeof obj === 'object');
-
-    if (_.isPlainObject(obj)) {
-        ctx = _.clone(ctx) || {};
-        this.process(obj, ctx);
-    }
+    this.servicesAndFunctions[serviceName] = [];
 
     var self = this;
-    // obj is either object or array
-    _.each(obj, function each(val) {
-        if (typeof val === 'object') {
-            self.walk(val, ctx);
+    _.each(svc.functions, function(func) {
+        self.processFunction(func, {
+            serviceName: serviceName,
+            functions: self.servicesAndFunctions[serviceName]
+        });
+    });
+};
+
+Spec.prototype.processProgram = function(root) {
+    if (root.type !== 'Program') {
+        throw new Error('expects type Program; received ' + root.type);
+    }
+    debug('program starts');
+    var self = this;
+    _.each(root.definitions, function(def) {
+        switch (def.type) {
+            case 'Exception':
+                self.processStruct(def);
+                break;
+            case 'Struct':
+                self.processStruct(def);
+                break;
+            case 'Service':
+                self.processService(def);
+                break;
+            case 'Enum':
+                self.processEnum(def);
+                break;
+            default:
+                throw new Error('definition type is not supported' + def.type);
         }
     });
 };
