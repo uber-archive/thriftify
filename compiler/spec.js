@@ -124,6 +124,12 @@ Spec.prototype.processService = function processService(obj, ctx) {
     this.servicesAndFunctions[serviceName] = [];
 };
 
+Spec.prototype.processEnum = function processEnum(obj, ctx) {
+    var name = obj.id.name;
+    var entity = new specs.AEnum(obj.enumDefinitions);
+    this.setType(name, entity);
+};
+
 Spec.prototype.process = function process(obj, ctx) {
     if (obj.type === 'Service') {
         this.processService(obj, ctx);
@@ -133,6 +139,8 @@ Spec.prototype.process = function process(obj, ctx) {
         this.processStruct(obj, ctx);
     } else if (obj.type === 'Struct') {
         this.processStruct(obj, ctx);
+    } else if (obj.type === 'Enum') {
+        this.processEnum(obj, ctx);
     }
 };
 
