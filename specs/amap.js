@@ -22,6 +22,7 @@
 
 var _ = require('lodash');
 var thriftrw = require('thriftrw');
+var TPair = thriftrw.TPair;
 var TYPE = thriftrw.TYPE;
 var util = require('util');
 
@@ -67,7 +68,7 @@ AMap.prototype.uglify = function uglify(map) {
     }
     var self = this;
     return _.reduce(map, function reduce(tmap, val, key) {
-        tmap.pairs.push([self.ktype.uglify(key), self.vtype.uglify(val)]);
+        tmap.pairs.push(TPair(self.ktype.uglify(key), self.vtype.uglify(val)));
         return tmap;
     }, thriftrw.TMap(this.ktype.typeid, this.vtype.typeid));
 };
