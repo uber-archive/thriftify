@@ -21,23 +21,25 @@
 'use strict';
 
 var util = require('util');
-var _ = require('lodash');
 var specs = require('../specs');
 var debug = require('debug')('compiler');
+var owns = Object.prototype.hasOwnProperty;
 
-var BUILTIN_TYPES = {
-    'binary': specs.ABinary,
-    'string': specs.AString,
-    'bool': specs.ABoolean,
-    'byte': specs.AByte,
-    'i16': specs.AInt16,
-    'i32': specs.AInt32,
-    'i64': specs.AInt64,
-    'double': specs.ADouble
+// The types structure starts with the default types, and devolves into a
+// dictionary of type declarations.
+function Types() {
+    this.binary = specs.ABinary;
+    this.string = specs.AString;
+    this.bool = specs.ABoolean;
+    this.byte = specs.AByte;
+    this.i16 = specs.AInt16;
+    this.i32 = specs.AInt32;
+    this.i64 = specs.AInt64;
+    this.double = specs.ADouble;
 };
 
 function Spec() {
-    this.types = _.clone(BUILTIN_TYPES);
+    this.types = new Types();
     this.servicesAndFunctions = {};
 }
 
@@ -80,8 +82,21 @@ Spec.prototype.parseField = function parseField(f) {
 };
 
 Spec.prototype.processStruct = function processStruct(s) {
+    var self = this;
     debug('enter struct', s);
-    var astruct = specs.AStruct({fields: _.map(s.fields, this.parseField.bind(this))});
+
+    var fieldNames = Object.keys(s.fields);
+    var fields = [];
+    for (var index = 0; index < fieldNames.length; index++) {
+        var fieldName = fieldNames[index];
+        var field = s.fields[fieldName];
+        fields[index] = self.parseField(field);
+    }
+
+    var astruct = new specs.AStruct({
+        fields: fields
+    });
+
     var name = s.id.name;
     this.setType(name, astruct);
 };
@@ -91,16 +106,23 @@ Spec.prototype.processFunction = function processFunction(func, opts) {
     var self = this;
     var funcName = func.id.name;
 
-    if (_.includes(opts.functions, funcName)) {
+    if (opts.functions.indexOf(funcName) >= 0) {
         throw new Error(util.format('service %s function %s already exists', opts.serviceName, funcName));
     }
     opts.functions.push(funcName);
 
     var typePrefix = util.format('%s::%s', opts.serviceName, funcName);
+
+    var fields = [];
+    for (var index = 0; index < func.fields.length; index++) {
+        var field = func.fields[index];
+        fields[index] = self.parseField(field);
+    }
+
     this.setType(
         util.format('%s_args', typePrefix),
         specs.AStruct({
-            fields: _.map(func.fields, this.parseField.bind(this))
+            fields: fields
         }));
 
     var resultFields = [];
@@ -110,9 +132,11 @@ Spec.prototype.processFunction = function processFunction(func, opts) {
         );
     }
     if (func.throws) {
-        _.each(func.throws.fields, function(i) {
-            resultFields.push(self.parseField(i));
-        });
+        var fields = [];
+        for (var index = 0; index < func.throws.fields; index++) {
+            var field = func.throws.fields[index];
+            resultFields[index] = self.parseField(field);
+        }
     }
 
     // TODO: add exceptions in _result struct
@@ -126,21 +150,23 @@ Spec.prototype.processEnum = function processEnum(e) {
     this.setType(name, entity);
 };
 
-Spec.prototype.processService = function processService(svc) {
-    debug('enter service', svc);
-    var serviceName = svc.id.name;
-    if (_.has(this.servicesAndFunctions, serviceName)) {
+Spec.prototype.processService = function processService(service) {
+    var self = this;
+    debug('enter service', service);
+    var serviceName = service.id.name;
+    if (owns.call(this.servicesAndFunctions, serviceName)) {
         throw new Error(util.format('service %s already exists', serviceName));
     }
     this.servicesAndFunctions[serviceName] = [];
 
-    var self = this;
-    _.each(svc.functions, function(func) {
-        self.processFunction(func, {
-            serviceName: serviceName,
-            functions: self.servicesAndFunctions[serviceName]
-        });
-    });
+    var options = {
+        serviceName: serviceName,
+        functions: self.servicesAndFunctions[serviceName]
+    };
+    for (var index = 0; index < service.functions.length; index++) {
+        var func = service.functions[index];
+        self.processFunction(func, options);
+    }
 };
 
 Spec.prototype.processProgram = function(root) {
@@ -149,7 +175,8 @@ Spec.prototype.processProgram = function(root) {
     }
     debug('program starts');
     var self = this;
-    _.each(root.definitions, function(def) {
+    for (var index = 0; index < root.definitions.length; index++) {
+        var def = root.definitions[index];
         switch (def.type) {
             case 'Exception':
                 self.processStruct(def);
@@ -166,7 +193,7 @@ Spec.prototype.processProgram = function(root) {
             default:
                 throw new Error('definition type is not supported' + def.type);
         }
-    });
+    }
 };
 
 module.exports = Spec;

@@ -20,14 +20,14 @@
 
 'use strict';
 
-var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TField = thriftrw.TField;
 var TYPE = thriftrw.TYPE;
 var util = require('util');
 
 function AField(opts) {
-    if (!(this instanceof AField)) {
+    var self = this;
+    if (!(self instanceof AField)) {
         return new AField(opts);
     }
     opts = opts || {};
@@ -40,26 +40,36 @@ function AField(opts) {
 }
 
 function AStruct(opts) {
+    var self = this;
     if (!(this instanceof AStruct)) {
         return new AStruct(opts);
     }
-    this.typeid = TYPE.STRUCT;
+    self.typeid = TYPE.STRUCT;
 
-    if (_.isUndefined(opts.fields)) {
+    if (opts.fields === undefined) {
         throw new Error('AStruct requires fields');
     }
-    this.name = opts.name || null;
-    this.fields = opts.fields;
-    this.fieldsById = _.indexBy(this.fields, 'id');
-    this.fieldsByName = _.indexBy(this.fields, 'name');
+    self.name = opts.name || null;
+    self.fields = opts.fields;
+    self.fieldsById = {};
+    self.fieldsByName = {};
+    self.fieldNames = [];
+    for (var index = 0; index < self.fields.length; index++) {
+        var field = self.fields[index];
+        self.fieldsById[field.id] = field;
+        self.fieldsByName[field.name] = field;
+        self.fieldNames[index] = field.name;
+    }
 }
 
 AStruct.prototype.reify = function reify(tstruct) {
     var self = this;
-    return _.reduce(tstruct.fields, function reduce(result, tfield) {
+    var result = {};
+    for (var index = 0; index < tstruct.fields.length; index++) {
+        var tfield = tstruct.fields[index];
         var afield = self.fieldsById[tfield.id];
         if (!afield) {
-            return result;
+            continue;
         }
         if (afield.type.typeid !== tfield.typeid) {
             throw new Error(util.format(
@@ -67,47 +77,30 @@ AStruct.prototype.reify = function reify(tstruct) {
                 tfield.id, afield.type.typeid, tfield.typeid));
         }
         result[afield.name] = afield.type.reify(tfield.val);
-        return result;
-    }, {});
+    }
+    return result;
 };
 
-function isNone(obj) {
-    return _.isNull(obj) || _.isUndefined(obj);
-}
-
 AStruct.prototype.uglify = function uglify(struct) {
-    if (!_.isPlainObject(struct)) {
-        throw new Error(util.format('typename %s; expects plain object; received type %s constructor %s val %s',
-            this.name, typeof struct, struct.constructor.name, util.inspect(struct)));
-    }
+    // TODO maybe require struct to be an instance of the Struct data object
+    // constructor.
     var self = this;
-    // required fields
-    _.each(this.fieldsByName, function(field) {
-        if (field.required && isNone(struct[field.name])) {
-            throw new Error(util.format('typename %s; missing required field %s',
-                self.name, field.name));
+    var tstruct = new thriftrw.TStruct();
+    for (var index = 0; index < self.fields.length; index++) {
+        var field = self.fields[index];
+        var value = struct[field.name];
+        if (value == null) {
+            if (field.required) {
+                throw new Error(util.format('typename %s; missing required field %s',
+                    self.name, field.name));
+            }
+        } else {
+            var tvalue = field.type.uglify(value);
+            var tfield = new TField(field.type.typeid, field.id, tvalue);
+            tstruct.fields.push(tfield);
         }
-    });
-    // uglify each field
-    return _.reduce(struct, function(tstruct, val, name) {
-        // ignore undefined and null fields because thrift doesn't allow null value
-        if (isNone(val)) {
-            return tstruct;
-        }
-
-        var afield = self.fieldsByName[name];
-        if (!afield) {
-            throw new Error(util.format('typename %s; unknown field %s', self.name, name));
-        }
-        try {
-            var tfield = TField(afield.type.typeid, afield.id, afield.type.uglify(val));
-        } catch (e) {
-            throw new Error(util.format('typename %s; failed to uglify field name %s id %d typeid %d val %s; inner error %s',
-                self.name, name, afield.id, afield.type.typeid, util.inspect(val), e.message));
-        }
-        tstruct.fields.push(tfield);
-        return tstruct;
-    }, thriftrw.TStruct());
+    }
+    return tstruct;
 };
 
 module.exports.AField = AField;

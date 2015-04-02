@@ -68,7 +68,7 @@ test('reify and uglify', function t(assert) {
         var back = spec.reify(raw);
         debug('back', util.inspect(back, {colors:true, depth:999}));
 
-        assert.deepEqual(val, back);
+        assert.deepEqual(back, val);
     });
     assert.end();
 });
