@@ -2,7 +2,7 @@ var tt = require('../../');
 var path = require('path');
 var ncarSpec = tt.newSpec(path.join(__dirname, 'ncar.thrift'));
 var thriftrw = require('thriftrw');
-var Benchmark = require("benchmark");
+var Benchmark = require('benchmark');
 var suite = new Benchmark.Suite;
 
 ////////////////////////////////////////////////////////
