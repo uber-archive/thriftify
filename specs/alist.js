@@ -20,7 +20,6 @@
 
 'use strict';
 
-var _ = require('lodash');
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
@@ -39,22 +38,26 @@ AList.prototype.reify = function reify(tlist) {
             this.etype.typeid, tlist.etypeid));
     }
     var self = this;
-    return _.reduce(tlist.elements, function reduce(list, ele) {
-        list.push(self.etype.reify(ele));
-        return list;
-    }, []);
+    var list = [];
+    for (var index = 0; index < tlist.elements.length; index++) {
+        var element = tlist.elements[index];
+        list[index] = self.etype.reify(element);
+    }
+    return list;
 };
 
 AList.prototype.uglify = function uglify(list) {
-    if (!_.isArray(list)) {
+    if (!Array.isArray(list)) {
         throw new Error('AList::uglify expects an array; received type %s %s val %s',
             typeof list, list.constructor.name, util.inspect(list));
     }
     var self = this;
-    return _.reduce(list, function reduce(tlist, ele) {
-        tlist.elements.push(self.etype.uglify(ele));
-        return tlist;
-    }, thriftrw.TList(this.etype.typeid));
+    var tlist = thriftrw.TList(self.etype.typeid);
+    for (var index = 0; index < list.length; index++) {
+        var element = list[index];
+        tlist.elements[index] = self.etype.uglify(element);
+    }
+    return tlist;
 };
 
 module.exports.AList = AList;
