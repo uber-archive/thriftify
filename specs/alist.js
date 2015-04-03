@@ -37,11 +37,10 @@ AList.prototype.reify = function reify(tlist) {
         throw new Error(util.format('AList::reify expects typeid %d; received %d',
             this.etype.typeid, tlist.etypeid));
     }
-    var self = this;
     var list = [];
     for (var index = 0; index < tlist.elements.length; index++) {
         var element = tlist.elements[index];
-        list[index] = self.etype.reify(element);
+        list[index] = this.etype.reify(element);
     }
     return list;
 };
@@ -51,11 +50,10 @@ AList.prototype.uglify = function uglify(list) {
         throw new Error('AList::uglify expects an array; received type %s %s val %s',
             typeof list, list.constructor.name, util.inspect(list));
     }
-    var self = this;
-    var tlist = thriftrw.TList(self.etype.typeid);
+    var tlist = thriftrw.TList(this.etype.typeid);
     for (var index = 0; index < list.length; index++) {
         var element = list[index];
-        tlist.elements[index] = self.etype.uglify(element);
+        tlist.elements[index] = this.etype.uglify(element);
     }
     return tlist;
 };

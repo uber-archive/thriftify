@@ -25,22 +25,21 @@ var TYPE = require('thriftrw/TYPE');
 module.exports.AEnum = AEnum;
 
 function AEnum(definitions) {
-    var self = this;
-    self.namesToValues = {};
-    self.valuesToNames = {};
+    this.namesToValues = {};
+    this.valuesToNames = {};
     var value = 0;
     for (var index = 0; index < definitions.length; index++) {
         var definition = definitions[index];
         var name = definition.id.name;
         value = definition.value != null ? definition.value : value;
-        if (self.namesToValues[name] !== undefined) {
+        if (this.namesToValues[name] !== undefined) {
             throw new Error('Can\'t create enum with duplicate name ' + name + ' for value ' + value);
         }
         if (value > 0x7fffffff) {
             throw new Error('Can\'t create enum with value out of bounds ' + value + ' for name ' + name);
         }
-        self.namesToValues[name] = value;
-        self.valuesToNames[value] = name;
+        this.namesToValues[name] = value;
+        this.valuesToNames[value] = name;
         value++;
     }
 }
@@ -48,23 +47,21 @@ function AEnum(definitions) {
 AEnum.prototype.typeid = TYPE.I32;
 
 AEnum.prototype.reify = function reify(value) {
-    var self = this;
     if (typeof value !== 'number') {
         throw new Error('Can\'t decode ' + typeof value + ' for enum, number expected');
     }
-    if (self.valuesToNames[value] === undefined) {
+    if (this.valuesToNames[value] === undefined) {
         throw new Error('Can\'t decode unknown value for enum ' + value);
     }
-    return self.valuesToNames[value];
+    return this.valuesToNames[value];
 };
 
 AEnum.prototype.uglify = function uglify(name) {
-    var self = this;
     if (typeof name !== 'string') {
         throw new Error('Can\'t encode ' + typeof name + ' for enum, string expected');
     }
-    if (self.namesToValues[name] === undefined) {
+    if (this.namesToValues[name] === undefined) {
         throw new Error('Can\'t encode unknown name for enum ' + name);
     }
-    return self.namesToValues[name];
+    return this.namesToValues[name];
 };

@@ -49,15 +49,14 @@ AMap.prototype.reify = function reify(tmap) {
             this.vtype.typeid, tmap.vtypeid));
     }
 
-    var self = this;
     var map = {};
     for (var index = 0; index < tmap.pairs.length; index++) {
         var pair = tmap.pairs[index];
-        var key = self.ktype.reify(pair.key);
+        var key = this.ktype.reify(pair.key);
         if (owns.call(map, key)) {
             throw new Error(util.format('duplicate key %s', key));
         }
-        var val = self.vtype.reify(pair.val);
+        var val = this.vtype.reify(pair.val);
         map[key] = val;
     }
     return map;
@@ -68,13 +67,12 @@ AMap.prototype.uglify = function uglify(map) {
         throw new Error(util.format('AMap::uglify expects a plain object; received type %s %s val %s',
             typeof map, map.constructor.name, util.inspect(map)));
     }
-    var self = this;
     var tmap = thriftrw.TMap(this.ktype.typeid, this.vtype.typeid);
     var keys = Object.keys(map);
     for (var index = 0; index < keys.length; index++) {
         var key = keys[index];
         var value = map[key];
-        tmap.pairs[index] = TPair(self.ktype.uglify(key), self.vtype.uglify(value));
+        tmap.pairs[index] = TPair(this.ktype.uglify(key), this.vtype.uglify(value));
     }
     return tmap;
 };

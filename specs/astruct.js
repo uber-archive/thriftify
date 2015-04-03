@@ -26,8 +26,7 @@ var TYPE = thriftrw.TYPE;
 var util = require('util');
 
 function AField(opts) {
-    var self = this;
-    if (!(self instanceof AField)) {
+    if (!(this instanceof AField)) {
         return new AField(opts);
     }
     opts = opts || {};
@@ -40,34 +39,32 @@ function AField(opts) {
 }
 
 function AStruct(opts) {
-    var self = this;
     if (!(this instanceof AStruct)) {
         return new AStruct(opts);
     }
-    self.typeid = TYPE.STRUCT;
+    this.typeid = TYPE.STRUCT;
 
     if (opts.fields === undefined) {
         throw new Error('AStruct requires fields');
     }
-    self.name = opts.name || null;
-    self.fields = opts.fields;
-    self.fieldsById = {};
-    self.fieldsByName = {};
-    self.fieldNames = [];
-    for (var index = 0; index < self.fields.length; index++) {
-        var field = self.fields[index];
-        self.fieldsById[field.id] = field;
-        self.fieldsByName[field.name] = field;
-        self.fieldNames[index] = field.name;
+    this.name = opts.name || null;
+    this.fields = opts.fields;
+    this.fieldsById = {};
+    this.fieldsByName = {};
+    this.fieldNames = [];
+    for (var index = 0; index < this.fields.length; index++) {
+        var field = this.fields[index];
+        this.fieldsById[field.id] = field;
+        this.fieldsByName[field.name] = field;
+        this.fieldNames[index] = field.name;
     }
 }
 
 AStruct.prototype.reify = function reify(tstruct) {
-    var self = this;
     var result = {};
     for (var index = 0; index < tstruct.fields.length; index++) {
         var tfield = tstruct.fields[index];
-        var afield = self.fieldsById[tfield.id];
+        var afield = this.fieldsById[tfield.id];
         if (!afield) {
             continue;
         }
@@ -82,15 +79,14 @@ AStruct.prototype.reify = function reify(tstruct) {
 };
 
 AStruct.prototype.uglify = function uglify(struct) {
-    var self = this;
     var tstruct = new thriftrw.TStruct();
-    for (var index = 0; index < self.fields.length; index++) {
-        var field = self.fields[index];
+    for (var index = 0; index < this.fields.length; index++) {
+        var field = this.fields[index];
         var value = struct[field.name];
         if (value == null) {
             if (field.required) {
                 throw new Error(util.format('typename %s; missing required field %s',
-                    self.name, field.name));
+                    this.name, field.name));
             }
         } else {
             var tvalue = field.type.uglify(value);
@@ -99,7 +95,7 @@ AStruct.prototype.uglify = function uglify(struct) {
                 tfield = new TField(field.type.typeid, field.id, tvalue);
             } catch (e) {
                 throw new Error(util.format('typename %s; failed to uglify field name %s id %d typeid %d val %s; inner error %s',
-                    self.name, name, field.id, field.type.typeid, util.inspect(value), e.message));
+                    this.name, name, field.id, field.type.typeid, util.inspect(value), e.message));
             }
             tstruct.fields.push(tfield);
         }
