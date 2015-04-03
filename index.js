@@ -32,7 +32,7 @@ function fromBuffer(buffer, spec, typename) {
     if (t.error) {
         throw t.error;
     }
-    var obj = t.result;
+    var obj = t.value;
     return obj;
 }
 
@@ -42,7 +42,7 @@ function toBuffer(obj, spec, typename) {
     if (t.error) {
         throw t.error;
     }
-    var raw = t.result;
+    var raw = t.value;
     var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
     return buf;
 }
