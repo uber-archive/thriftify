@@ -94,7 +94,13 @@ AStruct.prototype.uglify = function uglify(struct) {
             }
         } else {
             var tvalue = field.type.uglify(value);
-            var tfield = new TField(field.type.typeid, field.id, tvalue);
+            var tfield;
+            try {
+                tfield = new TField(field.type.typeid, field.id, tvalue);
+            } catch (e) {
+                throw new Error(util.format('typename %s; failed to uglify field name %s id %d typeid %d val %s; inner error %s',
+                    self.name, name, afield.id, afield.type.typeid, util.inspect(val), e.message));
+            }
             tstruct.fields.push(tfield);
         }
     }
