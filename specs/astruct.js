@@ -62,7 +62,6 @@ function AStruct(opts) {
 }
 
 AStruct.prototype.reify = function reify(tstruct) {
-    console.log('tstruct', tstruct);
     var result = {};
     for (var index = 0; index < tstruct.fields.length; index++) {
         var tfield = tstruct.fields[index];
