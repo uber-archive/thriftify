@@ -25,11 +25,12 @@ var TYPE = thriftrw.TYPE;
 
 module.exports.ABoolean = require('./aboolean').ABoolean();
 
-var ANumber = require('./anumber').ANumber;
-module.exports.AByte = ANumber(TYPE.BYTE);
-module.exports.ADouble = ANumber(TYPE.DOUBLE);
-module.exports.AInt16 = ANumber(TYPE.I16);
-module.exports.AInt32 = ANumber(TYPE.I32);
+var AInteger = require('./ainteger').AInteger;
+module.exports.AByte = AInteger(TYPE.BYTE);
+module.exports.AInt16 = AInteger(TYPE.I16);
+module.exports.AInt32 = AInteger(TYPE.I32);
+
+module.exports.ADouble = require('./adouble').ADouble();
 
 module.exports.AInt64 = require('./aint64').AInt64();
 
