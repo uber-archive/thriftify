@@ -25,6 +25,7 @@ var TPair = thriftrw.TPair;
 var TYPE = thriftrw.TYPE;
 var util = require('util');
 var owns = Object.prototype.hasOwnProperty;
+var result = require('./result');
 
 function AMap(ktype, vtype) {
     if (!(this instanceof AMap)) {
@@ -41,40 +42,69 @@ function AMap(ktype, vtype) {
 
 AMap.prototype.reify = function reify(tmap) {
     if (this.ktype.typeid !== tmap.ktypeid) {
-        throw new Error(util.format('AMap::reify expects ktypeid %d; received %d',
-            this.ktype.typeid, tmap.ktypeid));
+        return result.error(new Error(util.format('AMap::reify expects ktypeid %d; received %d',
+            this.ktype.typeid, tmap.ktypeid)));
     }
     if (this.vtype.typeid !== tmap.vtypeid) {
-        throw new Error(util.format('AMap::reify expects vtypeid %d; received %d',
-            this.vtype.typeid, tmap.vtypeid));
+        return result.error(new Error(util.format('AMap::reify expects vtypeid %d; received %d',
+            this.vtype.typeid, tmap.vtypeid)));
     }
 
     var map = {};
     for (var index = 0; index < tmap.pairs.length; index++) {
+        var t;
         var pair = tmap.pairs[index];
-        var key = this.ktype.reify(pair.key);
-        if (owns.call(map, key)) {
-            throw new Error(util.format('duplicate key %s', key));
+        t = this.ktype.reify(pair.key);
+        if (t.error) {
+            return result.chain(t, {
+                type: 'amap',
+                key: pair.key
+            });
         }
-        var val = this.vtype.reify(pair.val);
+        var key = t.result;
+        if (owns.call(map, key)) {
+            return result.error(new Error(util.format('duplicate key %s', key)));
+        }
+        t = this.vtype.reify(pair.val);
+        if (t.error) {
+            return result.chain(t, {
+                type: 'amap',
+                val: pair.val
+            });
+        }
+        var val = t.result;
         map[key] = val;
     }
-    return map;
+    return result.just(map);
 };
 
 AMap.prototype.uglify = function uglify(map) {
     if (!map || typeof map !== 'object' || Object.getPrototypeOf(map) !== Object.prototype) {
-        throw new Error(util.format('AMap::uglify expects a plain object; received type %s %s val %s',
-            typeof map, map.constructor.name, util.inspect(map)));
+        return result.error(new Error(util.format('AMap::uglify expects a plain object; received type %s %s val %s',
+            typeof map, map.constructor.name, util.inspect(map))));
     }
     var tmap = thriftrw.TMap(this.ktype.typeid, this.vtype.typeid);
     var keys = Object.keys(map);
     for (var index = 0; index < keys.length; index++) {
         var key = keys[index];
+        var t = this.ktype.uglify(key);
+        if (t.error) {
+            return result.chain(t, {
+                type: 'amap',
+                key: key
+            });
+        }
         var value = map[key];
-        tmap.pairs[index] = TPair(this.ktype.uglify(key), this.vtype.uglify(value));
+        var s = this.vtype.uglify(value);
+        if (s.error) {
+            return result.chain(s, {
+                type: 'amap',
+                value: value
+            });
+        }
+        tmap.pairs[index] = TPair(t.result, s.result);
     }
-    return tmap;
+    return result.just(tmap);
 };
 
 module.exports.AMap = AMap;
