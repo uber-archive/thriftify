@@ -28,35 +28,23 @@ var bufrw = require('bufrw');
 function fromBuffer(buffer, spec, typename) {
     var type = spec.getType(typename);
     var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var obj = type.reify(raw);
-    return obj;
-}
-
-function fromBufferSafe(buffer, spec, typename, cb) {
-    var obj;
-    try {
-        obj = fromBuffer(buffer, spec, typename);
-    } catch (e) {
-        return cb(e);
+    var t = type.reify(raw);
+    if (t.error) {
+        throw t.error;
     }
-    cb(null, obj);
+    var obj = t.value;
+    return obj;
 }
 
 function toBuffer(obj, spec, typename) {
     var type = spec.getType(typename);
-    var raw = type.uglify(obj);
+    var t = type.uglify(obj);
+    if (t.error) {
+        throw t.error;
+    }
+    var raw = t.value;
     var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
     return buf;
-}
-
-function toBufferSafe(obj, spec, typename, cb) {
-    var buf;
-    try {
-        buf = toBuffer(obj, spec, typename);
-    } catch (e) {
-        return cb(e);
-    }
-    cb(null, buf);
 }
 
 function createSpec(syntax) {
@@ -87,9 +75,7 @@ function readSpec(specFile, callback) {
 }
 
 module.exports.fromBuffer = fromBuffer;
-module.exports.fromBufferSafe = fromBufferSafe;
 module.exports.toBuffer = toBuffer;
-module.exports.toBufferSafe = toBufferSafe;
 module.exports.readSpecSync = readSpecSync;
 module.exports.readSpec = readSpec;
 module.exports.parseSpec = parseSpec;

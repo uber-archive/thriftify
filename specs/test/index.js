@@ -63,10 +63,19 @@ test('reify and uglify', function t(assert) {
         var spec = pair[0];
         var val = pair[1];
 
-        var raw = spec.uglify(val);
-        debug('raw', util.inspect(raw, {colors:true, depth:999}));
-        var back = spec.reify(raw);
-        debug('back', util.inspect(back, {colors:true, depth:999}));
+        var t = spec.uglify(val);
+        if (t.error) {
+            throw t.error;
+        }
+        var raw = t.result;
+        debug('raw', util.inspect(raw, {colors: true, depth: 999}));
+
+        var s = spec.reify(raw);
+        if (s.error) {
+            throw s.error;
+        }
+        var back = s.result;
+        debug('back', util.inspect(back, {colors: true, depth: 999}));
 
         assert.deepEqual(back, val);
     });
