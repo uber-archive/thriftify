@@ -23,7 +23,7 @@
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
-var result = require('./result');
+var ret = require('./ret');
 
 function AList(etype) {
     if (!(this instanceof AList)) {
@@ -35,7 +35,7 @@ function AList(etype) {
 
 AList.prototype.reify = function reify(tlist) {
     if (this.etype.typeid !== tlist.etypeid) {
-        return result.error(new Error(util.format(
+        return ret.error(new Error(util.format(
             'AList::reify expects typeid %d; received %d',
             this.etype.typeid, tlist.etypeid)));
     }
@@ -44,7 +44,7 @@ AList.prototype.reify = function reify(tlist) {
         var element = tlist.elements[index];
         var t = this.etype.reify(element);
         if (t.error) {
-            return result.chain(t, {
+            return ret.chain(t, {
                 type: 'alist',
                 index: index,
                 element: element
@@ -52,12 +52,12 @@ AList.prototype.reify = function reify(tlist) {
         }
         list[index] = t.result;
     }
-    return result.just(list);
+    return ret.just(list);
 };
 
 AList.prototype.uglify = function uglify(list) {
     if (!Array.isArray(list)) {
-        return result.error(new Error(
+        return ret.error(new Error(
             'AList::uglify expects an array; received type %s %s val %s',
             typeof list, list.constructor.name, util.inspect(list)));
     }
@@ -66,7 +66,7 @@ AList.prototype.uglify = function uglify(list) {
         var element = list[index];
         var t = this.etype.uglify(element);
         if (t.error) {
-            return result.chain(t, {
+            return ret.chain(t, {
                 type: 'alist',
                 index: index,
                 element: element
@@ -74,7 +74,7 @@ AList.prototype.uglify = function uglify(list) {
         }
         tlist.elements[index] = t.result;
     }
-    return result.just(tlist);
+    return ret.just(tlist);
 };
 
 module.exports.AList = AList;
