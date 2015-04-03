@@ -1,3 +1,114 @@
+{
+
+    function Enum(id, definitions) {
+        this.id = id;
+        this.enumDefinitions = definitions;
+    }
+    Enum.prototype.type = 'Enum';
+
+    function EnumDefinition(id, value) {
+        this.id = id;
+        this.value = value;
+    }
+    EnumDefinition.prototype.type = 'EnumDefinition';
+
+    function Senum(id, definitions) {
+        this.id = id;
+        this.senumDefinitions = definitions;
+    }
+    Senum.prototype.type = 'Senum';
+
+    function Const(id, fieldType, value) {
+        this.id = id;
+        this.fieldType = fieldType;
+        this.value = value;
+    }
+    Const.prototype.type = 'Const';
+
+    function Struct(id, fields) {
+        this.id = id;
+        this.fields = fields;
+    }
+    Struct.prototype.type = 'Struct';
+
+    function Union(id, fields) {
+        this.id = id;
+        this.fields = fields;
+    }
+    Union.prototype.type = 'Union';
+
+    function Exception(id, fields) {
+        this.id = id;
+        this.fields = fields;
+    }
+    Exception.prototype.type = 'Exception';
+
+    function Service(id, functions) {
+        this.id = id;
+        this.functions = functions;
+    }
+    Service.prototype.type = 'Service';
+
+    function FunctionDescription(id, fields, ft, _throws) {
+        this.id = id;
+        this.ft = ft; // TODO rename functionType
+        this.fields = fields;
+        this.throws = _throws;
+    }
+    FunctionDescription.prototype.type = 'function';
+
+    function Throws(fields) {
+        this.fields = fields;
+    }
+    Throws.prototype.type = 'throws';
+
+    function Field(id, ft, fid, req) {
+        this.id = id;
+        this.fieldType = ft;
+        this.fid = fid; // TODO rename fieldIdentifier
+        this.req = req; // TODO rename required
+    }
+    Field.prototype.type = 'Field';
+
+    function MapType(left, right) {
+        this.left = left; // TODO rename keyType
+        this.right = right; // TODO rename valueType
+    }
+    MapType.prototype.type = 'Map';
+
+    function SetType(fieldType) {
+        this.fieldType = fieldType; // TODO rename valueType
+    }
+    SetType.prototype.type = 'Set';
+
+    function ListType(fieldType) {
+        this.fieldType = fieldType; // TODO rename valueType
+    }
+    ListType.prototype.type = 'List';
+
+    function TypeAnnotation(id, value) {
+        this.id = id;
+        this.value = value;
+    }
+    TypeAnnotation.prototype.type = 'TypeAnnotation';
+
+    function Identifier(name) {
+        this.name = name;
+    }
+    Identifier.prototype.type = 'Identifier';
+
+    function Comment(value) {
+        this.value = value;
+    }
+    Comment.prototype.type = 'Comment';
+
+    function Literal(value) {
+        this.value = value;
+    }
+    Literal.prototype.type = 'Literal';
+
+}
+
 Program
   = __ hs:Header* ds:Definition* {
     return {
@@ -87,30 +198,17 @@ ListSeparator 'list separator'
 
 Enum
   = EnumToken __ id:Identifier __ '{' __ ed:EnumDefinition* __ '}' __ {
-    return {
-      type: 'Enum',
-      id: id,
-      enumDefinitions: ed
-    }
+    return new Enum(id, ed);
   }
 
 EnumDefinition
   = id:Identifier value:('=' __ v:IntConstant { return v.value })? __ ListSeparator? __ {
-    var ret = {
-      type: 'EnumDefinition',
-      id: id,
-      value: value
-    };
-    return ret;
+    return new EnumDefinition(id, value);
   }
 
 Senum
   = SenumToken id:Identifier '{' __ ss:SenumDefinition* '}' {
-    return {
-      type: 'Senum',
-      id: id,
-      senumDefinitions: ss
-    };
+    return new Senum(id, ss);
   }
 
 SenumDefinition
@@ -118,12 +216,7 @@ SenumDefinition
 
 Const
   = ConstToken ft:FieldType id:Identifier '=' __ cv:ConstValue ListSeparator? __ {
-    return {
-      type: 'Const',
-      id: id,
-      fieldType: ft,
-      value: cv
-    }
+    return new Const(id, ft, cv);
   }
 
 ConstValue
@@ -147,20 +240,12 @@ ConstValuePair
 
 Struct
   = 'struct' __ id:Identifier xsdAll? __ '{' __ fs:Field* __ '}' __ {
-    return {
-      type: 'Struct',
-      id: id,
-      fields: fs
-    }
+    return new Struct(id, fs);
   }
 
 Union
   = UnionToken id:Identifier xsdAll? __ '{' __ fs:Field* __ '}' __ {
-    return {
-      type: 'Union',
-      id: id,
-      fields: fs
-    };
+    return new Union(id, fs);
   }
 
 xsdAll
@@ -177,20 +262,12 @@ xsdAttributes
 
 Exception
   = 'exception' __ id:Identifier '{' __ fs:Field* __ '}' __ {
-    return {
-      type: 'Exception',
-      id: id,
-      fields: fs
-    }
+    return new Exception(id, fs);
   }
 
 Service
   = 'service' __ id:Identifier extends? '{' __ fns:function* __ '}' __ {
-    return {
-      type: 'Service',
-      id: id,
-      functions: fns
-    }
+    return new Service(id, fns);
   }
 
 extends
@@ -198,14 +275,7 @@ extends
 
 function
   = __ oneway? ft:FunctionType id:Identifier '(' __ fs:Field* __ ')' __ ts:throwz? ListSeparator? _ {
-    var ret = {
-      type: 'function',
-      id: id,
-      fields: fs,
-      ft: ft
-    }
-    if (ts) { ret.throws = ts; }
-    return ret;
+    return new FunctionDescription(id, fs, ft, ts);
   }
 
 oneway
@@ -213,22 +283,13 @@ oneway
 
 throwz
   = 'throws' __ '(' __ fs:Field* __ ')' __ {
-    return {
-      type: 'throws',
-      fields: fs
-    }
+    return new Throws(fs);
   }
 
 Field
   = _ fid:FieldIdentifier req:FieldRequiredness? ft:FieldType id:Identifier FieldValue?
     XsdFieldOptions? ListSeparator? {
-      return {
-        type: 'Field',
-        fieldType: ft,
-        id: id,
-        fid: fid,
-        req: req
-      }
+      return new Field(id, ft, fid, req);
     }
 
 FieldIdentifier
@@ -271,19 +332,12 @@ ContainerType
 
 MapType
   = 'map' __ cppType? '<' __ ft1:FieldType __ ',' __ ft2:FieldType __ '>' __ {
-    return {
-      type: 'Map',
-      left: ft1,
-      right: ft2
-    };
+    return new MapType(ft1, ft2);
   }
 
 SetType
   = 'set' __ cppType? '<' __ ft:FieldType __ '>' __ {
-    return {
-      type: 'Set',
-      fieldType: ft
-    }
+    return new SetType(ft);
   }
 
 // It's weird, and probably an error, but the original thrift yacc
@@ -293,10 +347,7 @@ SetType
 
 ListType
   = 'list' __ '<' __ ft:FieldType __ '>' __ cppType? {
-    return {
-      type: 'List',
-      fieldType: ft
-    };
+    return new ListType(ft);
   }
 
 cppType
@@ -307,11 +358,7 @@ TypeAnnotations
 
 TypeAnnotation
   = id:Identifier '=' __ l:Literal ListSeparator? {
-    return {
-      type: 'TypeAnnotation',
-      id: id,
-      value: l
-    }
+    return new TypeAnnotation(id, l);
   }
 
 IntConstant
@@ -326,10 +373,7 @@ Identifier
 
 IdentifierName 'identifier'
   = first:IdentifierStart rest:IdentifierPart* {
-      return {
-        type: 'Identifier',
-        name: first + rest.join('')
-      };
+      return new Identifier(first + rest.join(''));
     }
 
 IdentifierStart
@@ -413,10 +457,7 @@ Comment 'comment'
 
 MultiLineComment
   = '/*' comment:(!'*/' c:SourceCharacter { return c; })* '*/' {
-    return {
-      type: 'Comment',
-      value: comment
-    }
+    return new Comment(comment);
   }
 
 MultiLineCommentNoLineTerminator
@@ -424,18 +465,15 @@ MultiLineCommentNoLineTerminator
 
 SingleLineComment
   = '//' comment:(!LineTerminator sc:SourceCharacter { return sc; })* {
-    return {
-      type: 'Comment',
-      value: comment
-    }
+    return new Comment(comment);
   }
 
 StringLiteral 'string'
   = '"' chars:DoubleStringCharacter* '"' {
-      return { type: 'Literal', value: chars.join('') };
+      return new Literal(chars.join(''));
     }
   / "'" chars:SingleStringCharacter* "'" {
-      return { type: 'Literal', value: chars.join('') };
+      return new Literal(chars.join(''));
     }
 
 DoubleStringCharacter
@@ -493,10 +531,7 @@ UnicodeEscapeSequence
 
 HexIntegerLiteral
   = '0x'i digits:$HexDigit+ {
-      return {
-        type: 'Literal',
-        value: parseInt(digits, 16)
-      };
+      return new Literal(parseInt(digits, 16));
     }
 
 HexDigit
@@ -528,11 +563,9 @@ NonZeroDigit
 
 SignedInteger
   = [+-]? DecimalDigit+ {
-    return {
-      type: 'Literal',
-      value: parseFloat(text(), 10)
-    }
+    return new Literal(parseFloat(text(), 10));
   }
+
 
 /* Tokens */
 
