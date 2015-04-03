@@ -82,8 +82,6 @@ AStruct.prototype.reify = function reify(tstruct) {
 };
 
 AStruct.prototype.uglify = function uglify(struct) {
-    // TODO maybe require struct to be an instance of the Struct data object
-    // constructor.
     var self = this;
     var tstruct = new thriftrw.TStruct();
     for (var index = 0; index < self.fields.length; index++) {
