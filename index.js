@@ -32,31 +32,11 @@ function fromBuffer(buffer, spec, typename) {
     return obj;
 }
 
-function fromBufferSafe(buffer, spec, typename, cb) {
-    var obj;
-    try {
-        obj = fromBuffer(buffer, spec, typename);
-    } catch (e) {
-        return cb(e);
-    }
-    cb(null, obj);
-}
-
 function toBuffer(obj, spec, typename) {
     var type = spec.getType(typename);
     var raw = type.uglify(obj);
     var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
     return buf;
-}
-
-function toBufferSafe(obj, spec, typename, cb) {
-    var buf;
-    try {
-        buf = toBuffer(obj, spec, typename);
-    } catch (e) {
-        return cb(e);
-    }
-    cb(null, buf);
 }
 
 function createSpec(syntax) {
@@ -87,9 +67,7 @@ function readSpec(specFile, callback) {
 }
 
 module.exports.fromBuffer = fromBuffer;
-module.exports.fromBufferSafe = fromBufferSafe;
 module.exports.toBuffer = toBuffer;
-module.exports.toBufferSafe = toBufferSafe;
 module.exports.readSpecSync = readSpecSync;
 module.exports.readSpec = readSpec;
 module.exports.parseSpec = parseSpec;
