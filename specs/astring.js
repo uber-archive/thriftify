@@ -1,6 +1,7 @@
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
+var result = require('./result');
 
 function AString() {
     if (!(this instanceof AString)) {
@@ -11,18 +12,20 @@ function AString() {
 
 AString.prototype.reify = function reify(tobj) {
     if (!(tobj instanceof Buffer)) {
-        throw new Error(util.format('AString::reify expects a Buffer; received %s %s',
-            typeof tobj, tobj.constructor.name));
+        return result.error(new Error(util.format(
+            'AString::reify expects a Buffer; received %s %s',
+            typeof tobj, tobj.constructor.name)));
     }
-    return tobj.toString('utf8');
+    return result.just(tobj.toString('utf8'));
 };
 
 AString.prototype.uglify = function uglify(obj) {
     if (typeof obj !== 'string') {
-        throw new Error(util.format('AString::uglify expects a String; received %s %s',
-            typeof obj, obj.constructor.name));
+        return result.error(new Error(util.format(
+            'AString::uglify expects a String; received %s %s',
+            typeof obj, obj.constructor.name)));
     }
-    return new Buffer(obj);
+    return result.just(new Buffer(obj));
 };
 
 module.exports.AString = AString;

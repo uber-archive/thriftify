@@ -23,6 +23,7 @@
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
+var result = require('./result');
 
 function AList(etype) {
     if (!(this instanceof AList)) {
@@ -34,28 +35,46 @@ function AList(etype) {
 
 AList.prototype.reify = function reify(tlist) {
     if (this.etype.typeid !== tlist.etypeid) {
-        throw new Error(util.format('AList::reify expects typeid %d; received %d',
-            this.etype.typeid, tlist.etypeid));
+        return result.error(new Error(util.format(
+            'AList::reify expects typeid %d; received %d',
+            this.etype.typeid, tlist.etypeid)));
     }
     var list = [];
     for (var index = 0; index < tlist.elements.length; index++) {
         var element = tlist.elements[index];
-        list[index] = this.etype.reify(element);
+        var t = this.etype.reify(element);
+        if (t.error) {
+            return result.chain(t, {
+                type: 'alist',
+                index: index,
+                element: element
+            });
+        }
+        list[index] = t.result;
     }
-    return list;
+    return result.just(list);
 };
 
 AList.prototype.uglify = function uglify(list) {
     if (!Array.isArray(list)) {
-        throw new Error('AList::uglify expects an array; received type %s %s val %s',
-            typeof list, list.constructor.name, util.inspect(list));
+        return result.error(new Error(
+            'AList::uglify expects an array; received type %s %s val %s',
+            typeof list, list.constructor.name, util.inspect(list)));
     }
     var tlist = thriftrw.TList(this.etype.typeid);
     for (var index = 0; index < list.length; index++) {
         var element = list[index];
-        tlist.elements[index] = this.etype.uglify(element);
+        var t = this.etype.uglify(element);
+        if (t.error) {
+            return result.chain(t, {
+                type: 'alist',
+                index: index,
+                element: element
+            });
+        }
+        tlist.elements[index] = t.result;
     }
-    return tlist;
+    return result.just(tlist);
 };
 
 module.exports.AList = AList;
