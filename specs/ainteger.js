@@ -14,7 +14,7 @@ AInteger.prototype.reify = function reify(tobj) {
         throw new Error(util.format('AInteger::reify expects a number; received %s %s',
             typeof tobj, tobj.constructor.name));
     }
-    if ((tobj | 0) !== tobj) {
+    if (Math.floor(tobj) !== tobj) {
         throw new Error(util.format('AInteger::reify expects an integer; received float %s', tobj));
     }
     return tobj;
@@ -25,7 +25,7 @@ AInteger.prototype.uglify = function uglify(obj) {
         throw new Error(util.format('AInteger::uglify expects a number; received %s %s',
             typeof obj, obj.constructor.name));
     }
-    if ((obj | 0 ) !== obj) {
+    if (Math.floor(obj) !== obj) {
         throw new Error(util.format('AInteger::uglify expects an integer; received float %s', obj));
     }
     return obj;
