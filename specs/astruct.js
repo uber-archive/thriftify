@@ -93,8 +93,8 @@ AStruct.prototype.uglify = function uglify(struct) {
         var value = struct[field.name];
         if (value == null) {
             if (field.required) {
-                throw new Error(util.format('typename %s; missing required field %s',
-                    this.name, field.name));
+                return ret.error(new Error(util.format('typename %s; missing required field %s',
+                    this.name, field.name)));
             }
         } else {
             var t = field.type.uglify(value);
