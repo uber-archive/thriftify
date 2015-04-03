@@ -24,7 +24,7 @@ var thriftrw = require('thriftrw');
 var TField = thriftrw.TField;
 var TYPE = thriftrw.TYPE;
 var util = require('util');
-var result = require('./result');
+var ret = require('./ret');
 
 function AField(opts) {
     if (!(this instanceof AField)) {
@@ -62,6 +62,7 @@ function AStruct(opts) {
 }
 
 AStruct.prototype.reify = function reify(tstruct) {
+    console.log('tstruct', tstruct);
     var result = {};
     for (var index = 0; index < tstruct.fields.length; index++) {
         var tfield = tstruct.fields[index];
@@ -70,20 +71,20 @@ AStruct.prototype.reify = function reify(tstruct) {
             continue;
         }
         if (afield.type.typeid !== tfield.typeid) {
-            return result.error(new Error(util.format(
+            return ret.error(new Error(util.format(
                 'AStruct::reify expects field %d typeid %d; received %d',
                 tfield.id, afield.type.typeid, tfield.typeid)));
         }
         var t = afield.type.reify(tfield.val);
         if (t.error) {
-            return result.chain(t, {
+            return ret.chain(t, {
                 type: 'astruct',
                 field: afield
             });
         }
         result[afield.name] = t.result;
     }
-    return result.just(result);
+    return ret.just(result);
 };
 
 AStruct.prototype.uglify = function uglify(struct) {
@@ -99,7 +100,7 @@ AStruct.prototype.uglify = function uglify(struct) {
         } else {
             var t = field.type.uglify(value);
             if (t.error) {
-                return result.chain(t, {
+                return ret.chain(t, {
                     type: 'astruct',
                     field: field
                 });
@@ -109,7 +110,7 @@ AStruct.prototype.uglify = function uglify(struct) {
             tstruct.fields.push(tfield);
         }
     }
-    return result.just(tstruct);
+    return ret.just(tstruct);
 };
 
 module.exports.AField = AField;

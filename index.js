@@ -28,13 +28,21 @@ var bufrw = require('bufrw');
 function fromBuffer(buffer, spec, typename) {
     var type = spec.getType(typename);
     var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var obj = type.reify(raw);
+    var t = type.reify(raw);
+    if (t.error) {
+        throw t.error;
+    }
+    obj = t.result;
     return obj;
 }
 
 function toBuffer(obj, spec, typename) {
     var type = spec.getType(typename);
-    var raw = type.uglify(obj);
+    var t = type.uglify(obj);
+    if (t.error) {
+        throw t.error;
+    }
+    var raw = t;
     var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
     return buf;
 }

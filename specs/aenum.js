@@ -21,7 +21,7 @@
 'use strict';
 
 var TYPE = require('thriftrw/TYPE');
-var result = require('./result');
+var ret = require('./ret');
 
 module.exports.AEnum = AEnum;
 
@@ -49,20 +49,20 @@ AEnum.prototype.typeid = TYPE.I32;
 
 AEnum.prototype.reify = function reify(value) {
     if (typeof value !== 'number') {
-        return result.error(new Error('Can\'t decode ' + typeof value + ' for enum, number expected'));
+        return ret.error(new Error('Can\'t decode ' + typeof value + ' for enum, number expected'));
     }
     if (this.valuesToNames[value] === undefined) {
-        return result.error(new Error('Can\'t decode unknown value for enum ' + value));
+        return ret.error(new Error('Can\'t decode unknown value for enum ' + value));
     }
-    return result.just(this.valuesToNames[value]);
+    return ret.just(this.valuesToNames[value]);
 };
 
 AEnum.prototype.uglify = function uglify(name) {
     if (typeof name !== 'string') {
-        return result.error(new Error('Can\'t encode ' + typeof name + ' for enum, string expected'));
+        return ret.error(new Error('Can\'t encode ' + typeof name + ' for enum, string expected'));
     }
     if (this.namesToValues[name] === undefined) {
-        return result.error(new Error('Can\'t encode unknown name for enum ' + name));
+        return ret.error(new Error('Can\'t encode unknown name for enum ' + name));
     }
-    return result.just(this.namesToValues[name]);
+    return ret.just(this.namesToValues[name]);
 };
