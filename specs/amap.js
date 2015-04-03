@@ -61,7 +61,7 @@ AMap.prototype.reify = function reify(tmap) {
                 key: pair.key
             });
         }
-        var key = t.result;
+        var key = t.value;
         if (owns.call(map, key)) {
             return ret.error(new Error(util.format('duplicate key %s', key)));
         }
@@ -72,7 +72,7 @@ AMap.prototype.reify = function reify(tmap) {
                 val: pair.val
             });
         }
-        var val = t.result;
+        var val = t.value;
         map[key] = val;
     }
     return ret.just(map);
@@ -102,7 +102,7 @@ AMap.prototype.uglify = function uglify(map) {
                 value: value
             });
         }
-        tmap.pairs[index] = TPair(t.result, s.result);
+        tmap.pairs[index] = TPair(t.value, s.value);
     }
     return ret.just(tmap);
 };

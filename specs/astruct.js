@@ -81,7 +81,7 @@ AStruct.prototype.reify = function reify(tstruct) {
                 field: afield
             });
         }
-        result[afield.name] = t.result;
+        result[afield.name] = t.value;
     }
     return ret.just(result);
 };
@@ -104,7 +104,7 @@ AStruct.prototype.uglify = function uglify(struct) {
                     field: field
                 });
             }
-            var tvalue = t.result;
+            var tvalue = t.value;
             var tfield = new TField(field.type.typeid, field.id, tvalue);
             tstruct.fields.push(tfield);
         }

@@ -72,7 +72,7 @@ AList.prototype.uglify = function uglify(list) {
                 element: element
             });
         }
-        tlist.elements[index] = t.result;
+        tlist.elements[index] = t.value;
     }
     return ret.just(tlist);
 };
