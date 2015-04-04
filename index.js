@@ -23,28 +23,46 @@
 var Spec = require('./compiler/spec');
 var grammar = require('./compiler/grammar');
 var thriftrw = require('thriftrw');
-var bufrw = require('bufrw');
+var bufrw = require('bufrw/interface');
+
+function fromBufferResult(buffer, spec, typeName) {
+    var typeResult = spec.getTypeResult(typeName);
+    if (typeResult.error) {
+        return typeResult;
+    }
+    var type = typeResult.value;
+    var rawResult = bufrw.fromBufferResult(thriftrw.TStructRW, buffer);
+    if (rawResult.error) {
+        return rawResult;
+    }
+    var rawValue = rawResult.value;
+    var reifiedResult = type.reify(rawValue);
+    if (reifiedResult.error) {
+        return new Result(reifiedResult.error);
+    }
+    return reifiedResult;
+}
+
+function toBufferResult(object, spec, typeName) {
+    var typeResult = spec.getTypeResult(typeName);
+    if (typeResult.error) {
+        return typeResult;
+    }
+    var type = typeResult.value;
+    var uglifiedResult = type.uglify(object);
+    if (uglifiedResult.error) {
+        return uglifiedResult;
+    }
+    var uglified = uglifiedResult.value;
+    return bufrw.toBufferResult(thriftrw.TStructRW, uglified);
+}
 
 function fromBuffer(buffer, spec, typename) {
-    var type = spec.getType(typename);
-    var raw = bufrw.fromBuffer(thriftrw.TStructRW, buffer);
-    var t = type.reify(raw);
-    if (t.error) {
-        throw t.error;
-    }
-    var obj = t.value;
-    return obj;
+    return fromBufferResult(buffer, spec, typename).toValue();
 }
 
 function toBuffer(obj, spec, typename) {
-    var type = spec.getType(typename);
-    var t = type.uglify(obj);
-    if (t.error) {
-        throw t.error;
-    }
-    var raw = t.value;
-    var buf = bufrw.toBuffer(thriftrw.TStructRW, raw);
-    return buf;
+    return toBufferResult(obj, spec, typename).toValue();
 }
 
 function createSpec(syntax) {
@@ -74,6 +92,8 @@ function readSpec(specFile, callback) {
     }
 }
 
+module.exports.fromBufferResult = fromBufferResult;
+module.exports.toBufferResult = toBufferResult;
 module.exports.fromBuffer = fromBuffer;
 module.exports.toBuffer = toBuffer;
 module.exports.readSpecSync = readSpecSync;

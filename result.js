@@ -18,33 +18,4 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var thriftrw = require('thriftrw');
-var TYPE = thriftrw.TYPE;
-var util = require('util');
-var Result = require('../result');
-var SpecError = require('./error');
-
-function ABoolean() {
-    if (!(this instanceof ABoolean)) {
-        return new ABoolean();
-    }
-    this.typeid = TYPE.BOOL;
-}
-
-ABoolean.prototype.reify = function reify(tobj) {
-    if (typeof tobj !== 'number') {
-        return new Result(SpecError(util.format('ABoolean::reify expects a number; received %s %s',
-            typeof tobj, tobj.constructor.name)));
-    }
-    return new Result(null, Boolean(tobj));
-};
-
-ABoolean.prototype.uglify = function uglify(obj) {
-    if (typeof obj !== 'boolean') {
-        return new Result(SpecError(util.format('ABoolean::uglify expects a boolean; received %s %s',
-            typeof obj, obj.constructor.name)));
-    }
-    return new Result(null, Number(obj));
-};
-
-module.exports.ABoolean = ABoolean;
+module.exports = require('bufrw/result');
