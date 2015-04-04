@@ -85,6 +85,7 @@ Spec.prototype.processStruct = function processStruct(s) {
     var self = this;
     debug('enter struct', s);
 
+    var structName = s.id.name;
     var fieldNames = Object.keys(s.fields);
     var fields = [];
     for (var index = 0; index < fieldNames.length; index++) {
@@ -94,6 +95,7 @@ Spec.prototype.processStruct = function processStruct(s) {
     }
 
     var astruct = new specs.AStruct({
+        name: structName,
         fields: fields
     });
 
@@ -122,6 +124,7 @@ Spec.prototype.processFunction = function processFunction(func, opts) {
     this.setType(
         util.format('%s_args', typePrefix),
         specs.AStruct({
+            name: funcName,
             fields: fields
         }));
 
@@ -141,7 +144,10 @@ Spec.prototype.processFunction = function processFunction(func, opts) {
 
     // TODO: add exceptions in _result struct
     this.setType(util.format('%s_result', typePrefix),
-        specs.AStruct({fields: resultFields}));
+        specs.AStruct({
+            name: funcName,
+            fields: resultFields
+        }));
 };
 
 Spec.prototype.processEnum = function processEnum(e) {

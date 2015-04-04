@@ -25,7 +25,7 @@ var TField = thriftrw.TField;
 var TYPE = thriftrw.TYPE;
 var util = require('util');
 
-var validName = /^[$A-Z_][0-9A-Z_$]*$/i;
+var validNameExpression = /^[$A-Z_][0-9A-Z_$]*$/i;
 
 function AField(opts) {
     if (!(this instanceof AField)) {
@@ -48,19 +48,24 @@ function AStruct(opts) {
     if (opts.fields === undefined) {
         throw new Error('AStruct requires fields');
     }
-    this.name = opts.name || null;
+    this.name = null;
     this.fields = opts.fields;
     this.fieldsById = {};
     this.fieldsByName = {};
     this.fieldNames = [];
-    var allValidNames = validName.test(this.name);
+    var allValidNames = true;
     for (var index = 0; index < this.fields.length; index++) {
         var field = this.fields[index];
         this.fieldsById[field.id] = field;
         this.fieldsByName[field.name] = field;
         this.fieldNames[index] = field.name;
-        allValidNames = allValidNames && validName.test(field.name);
+        var validName = validNameExpression.test(field.name);
+        allValidNames = allValidNames && validName;
     }
+
+    this.name = opts.name || this.fieldNames.join('_');
+    var validName = validNameExpression.test(this.name);
+    allValidNames = allValidNames && validName;
 
     if (allValidNames) {
         this.structConstructor = createConstructor(this.name, this.fieldNames);
@@ -71,7 +76,6 @@ function AStruct(opts) {
 
 function createConstructor(name, fieldNames) {
     var source;
-    name = name || 'Anonymous';
     source = '(function Thriftify_' + name + '() {\n';
     for (var index = 0; index < fieldNames.length; index++) {
         var fieldName = fieldNames[index];
