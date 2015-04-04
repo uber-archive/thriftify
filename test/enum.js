@@ -26,7 +26,7 @@ var tape = require('tape');
 
 tape('round trip an enum', function t(assert) {
     var enumSpec = thriftify.readSpecSync(path.join(__dirname, 'enum.thrift'));
-    var inStruct = {me3_d1: 'ME3_D1'};
+    var inStruct = {me2_2: null, me3_n2: null, me3_d1: 'ME3_D1'};
     var buffer = thriftify.toBuffer(inStruct, enumSpec, 'MyStruct');
     var outStruct = thriftify.fromBuffer(buffer, enumSpec, 'MyStruct');
     assert.deepEquals(outStruct, inStruct);
@@ -35,7 +35,7 @@ tape('round trip an enum', function t(assert) {
 
 tape('first enum is 0 by default', function t(assert) {
     var enumSpec = thriftify.readSpecSync(path.join(__dirname, 'enum.thrift'));
-    var inStruct = {me3_d1: 'ME3_0'};
+    var inStruct = {me2_2: null, me3_n2: null, me3_d1: 'ME3_0'};
     var buffer = thriftify.toBuffer(inStruct, enumSpec, 'MyStruct');
     var expected = new Buffer([
         0x08, 0x00, // struct
@@ -49,7 +49,7 @@ tape('first enum is 0 by default', function t(assert) {
 
 tape('count resumes from previous enum', function t(assert) {
     var enumSpec = thriftify.readSpecSync(path.join(__dirname, 'enum.thrift'));
-    var inStruct = {me3_d1: 'ME3_N1'};
+    var inStruct = {me2_2: null, me3_n2: null, me3_d1: 'ME3_N1'};
     var buffer = thriftify.toBuffer(inStruct, enumSpec, 'MyStruct');
     var expected = new Buffer([
         0x08, 0x00, // type struct, index 0
@@ -63,7 +63,7 @@ tape('count resumes from previous enum', function t(assert) {
 
 tape('duplicate name permitted', function t(assert) {
     var enumSpec = thriftify.readSpecSync(path.join(__dirname, 'enum.thrift'));
-    var inStruct = {me3_d1: 'ME3_D0'};
+    var inStruct = {me2_2: null, me3_n2: null, me3_d1: 'ME3_D0'};
     var buffer = thriftify.toBuffer(inStruct, enumSpec, 'MyStruct');
     var expected = new Buffer([
         0x08, 0x00, // type struct, index 0
@@ -77,10 +77,12 @@ tape('duplicate name permitted', function t(assert) {
 
 tape('duplicate name returns in normal form', function t(assert) {
     var enumSpec = thriftify.readSpecSync(path.join(__dirname, 'enum.thrift'));
-    var inStruct = {me3_d1: 'ME3_D0'};
+    var inStruct = {me2_2: null, me3_n2: null, me3_d1: 'ME3_D0'};
     var buffer = thriftify.toBuffer(inStruct, enumSpec, 'MyStruct');
     var outStruct = thriftify.fromBuffer(buffer, enumSpec, 'MyStruct');
     assert.deepEqual(outStruct, {
+        me2_2: null,
+        me3_n2: null,
         me3_d1: 'ME3_D0'
     });
     assert.end();
