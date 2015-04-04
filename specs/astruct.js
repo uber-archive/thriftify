@@ -24,9 +24,10 @@ var thriftrw = require('thriftrw');
 var TField = thriftrw.TField;
 var TYPE = thriftrw.TYPE;
 var util = require('util');
-var ret = require('./ret');
+var Result = require('../result');
+var SpecError = require('./error');
 
-var validName = /^[$A-Z_][0-9A-Z_$]*$/i;
+var validNameExpression = /^[$A-Z_][0-9A-Z_$]*$/i;
 
 function AField(opts) {
     if (!(this instanceof AField)) {
@@ -49,19 +50,24 @@ function AStruct(opts) {
     if (opts.fields === undefined) {
         throw new Error('AStruct requires fields');
     }
-    this.name = opts.name || null;
+    this.name = null;
     this.fields = opts.fields;
     this.fieldsById = {};
     this.fieldsByName = {};
     this.fieldNames = [];
-    var allValidNames = validName.test(this.name);
+    var allValidNames = true;
     for (var index = 0; index < this.fields.length; index++) {
         var field = this.fields[index];
         this.fieldsById[field.id] = field;
         this.fieldsByName[field.name] = field;
         this.fieldNames[index] = field.name;
-        allValidNames = allValidNames && validName.test(field.name);
+        var validName = validNameExpression.test(field.name);
+        allValidNames = allValidNames && validName;
     }
+
+    this.name = opts.name || this.fieldNames.join('_');
+    var validName = validNameExpression.test(this.name);
+    allValidNames = allValidNames && validName;
 
     if (allValidNames) {
         this.structConstructor = createConstructor(this.name, this.fieldNames);
@@ -72,7 +78,6 @@ function AStruct(opts) {
 
 function createConstructor(name, fieldNames) {
     var source;
-    name = name || 'Anonymous';
     source = '(function Thriftify_' + name + '() {\n';
     for (var index = 0; index < fieldNames.length; index++) {
         var fieldName = fieldNames[index];
@@ -98,20 +103,21 @@ AStruct.prototype.reify = function reify(tstruct) {
             continue;
         }
         if (afield.type.typeid !== tfield.typeid) {
-            return ret.error(new Error(util.format(
+            return new Result(SpecError(util.format(
                 'AStruct::reify expects field %d typeid %d; received %d',
                 tfield.id, afield.type.typeid, tfield.typeid)));
         }
         var t = afield.type.reify(tfield.val);
         if (t.error) {
-            return ret.chain(t, {
+            t.error.annotate({
                 type: 'astruct',
                 field: afield
             });
+            return t;
         }
         result[afield.name] = t.value;
     }
-    return ret.just(result);
+    return new Result(null, result);
 };
 
 AStruct.prototype.uglify = function uglify(struct) {
@@ -121,23 +127,24 @@ AStruct.prototype.uglify = function uglify(struct) {
         var value = struct[field.name];
         if (value == null) {
             if (field.required) {
-                return ret.error(new Error(util.format('typename %s; missing required field %s',
+                return new Result(SpecError(util.format('typename %s; missing required field %s',
                     this.name, field.name)));
             }
         } else {
             var t = field.type.uglify(value);
             if (t.error) {
-                return ret.chain(t, {
+                t.error.annotate({
                     type: 'astruct',
                     field: field
                 });
+                return t;
             }
             var tvalue = t.value;
             var tfield = new TField(field.type.typeid, field.id, tvalue);
             tstruct.fields.push(tfield);
         }
     }
-    return ret.just(tstruct);
+    return new Result(null, tstruct);
 };
 
 module.exports.AField = AField;

@@ -24,6 +24,7 @@ var util = require('util');
 var specs = require('../specs');
 var debug = require('debug')('compiler');
 var owns = Object.prototype.hasOwnProperty;
+var Result = require('../result');
 
 // The types structure starts with the default types, and devolves into a
 // dictionary of type declarations.
@@ -44,18 +45,29 @@ function Spec() {
 }
 
 Spec.prototype.getType = function getType(name) {
+    var self = this;
+    return self.getTypeResult(name).toValue();
+};
+
+Spec.prototype.getTypeResult = function getType(name) {
     var type = this.types[name];
     if (!type) {
-        throw new Error(util.format('type %s not found', name));
+        return new Result(new Error(util.format('type %s not found', name)));
     }
-    return type;
+    return new Result(null, type);
 };
 
 Spec.prototype.setType = function setType(name, type) {
+    var self = this;
+    return self.setTypeResult(name, type).toValue();
+};
+
+Spec.prototype.setTypeResult = function setType(name, type) {
     if (this.types[name]) {
-        throw new Error(util.format('type %s already exists', name));
+        return new Result(new Error(util.format('type %s already exists', name)));
     }
     this.types[name] = type;
+    return new Result();
 };
 
 Spec.prototype.lookupType = function lookupType(t) {
@@ -85,6 +97,7 @@ Spec.prototype.processStruct = function processStruct(s) {
     var self = this;
     debug('enter struct', s);
 
+    var structName = s.id.name;
     var fieldNames = Object.keys(s.fields);
     var fields = [];
     for (var index = 0; index < fieldNames.length; index++) {
@@ -94,6 +107,7 @@ Spec.prototype.processStruct = function processStruct(s) {
     }
 
     var astruct = new specs.AStruct({
+        name: structName,
         fields: fields
     });
 
@@ -122,6 +136,7 @@ Spec.prototype.processFunction = function processFunction(func, opts) {
     this.setType(
         util.format('%s_args', typePrefix),
         specs.AStruct({
+            name: funcName,
             fields: fields
         }));
 
@@ -141,7 +156,10 @@ Spec.prototype.processFunction = function processFunction(func, opts) {
 
     // TODO: add exceptions in _result struct
     this.setType(util.format('%s_result', typePrefix),
-        specs.AStruct({fields: resultFields}));
+        specs.AStruct({
+            name: funcName,
+            fields: resultFields
+        }));
 };
 
 Spec.prototype.processEnum = function processEnum(e) {

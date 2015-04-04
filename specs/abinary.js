@@ -21,7 +21,8 @@
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
-var ret = require('./ret');
+var Result = require('../result');
+var SpecError = require('./error');
 
 function ABinary() {
     if (!(this instanceof ABinary)) {
@@ -32,18 +33,18 @@ function ABinary() {
 
 ABinary.prototype.reify = function reify(tobj) {
     if (!(tobj instanceof Buffer)) {
-        return ret.error(new Error(util.format('ABinary::reify expects a Buffer; received %s %s',
+        return new Result(SpecError(util.format('ABinary::reify expects a Buffer; received %s %s',
             typeof tobj, tobj.constructor.name)));
     }
-    return ret.just(tobj);
+    return new Result(null, tobj);
 };
 
 ABinary.prototype.uglify = function uglify(obj) {
     if (!(obj instanceof Buffer)) {
-        return ret.error(new Error(util.format('AString::uglify expects a Buffer; received %s %s',
+        return new Result(SpecError(util.format('AString::uglify expects a Buffer; received %s %s',
             typeof obj, obj.constructor.name)));
     }
-    return ret.just(obj);
+    return new Result(null, obj);
 };
 
 module.exports.ABinary = ABinary;
