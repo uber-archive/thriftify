@@ -26,6 +26,8 @@ var TYPE = thriftrw.TYPE;
 var util = require('util');
 var ret = require('./ret');
 
+var validNameExpression = /^[$A-Z_][0-9A-Z_$]*$/i;
+
 function AField(opts) {
     if (!(this instanceof AField)) {
         return new AField(opts);
@@ -43,26 +45,56 @@ function AStruct(opts) {
     if (!(this instanceof AStruct)) {
         return new AStruct(opts);
     }
-    this.typeid = TYPE.STRUCT;
 
     if (opts.fields === undefined) {
         throw new Error('AStruct requires fields');
     }
-    this.name = opts.name || null;
+    this.name = null;
     this.fields = opts.fields;
     this.fieldsById = {};
     this.fieldsByName = {};
     this.fieldNames = [];
+    var allValidNames = true;
     for (var index = 0; index < this.fields.length; index++) {
         var field = this.fields[index];
         this.fieldsById[field.id] = field;
         this.fieldsByName[field.name] = field;
         this.fieldNames[index] = field.name;
+        var validName = validNameExpression.test(field.name);
+        allValidNames = allValidNames && validName;
+    }
+
+    this.name = opts.name || this.fieldNames.join('_');
+    var validName = validNameExpression.test(this.name);
+    allValidNames = allValidNames && validName;
+
+    if (allValidNames) {
+        this.structConstructor = createConstructor(this.name, this.fieldNames);
+    } else {
+        this.structConstructor = Object;
     }
 }
 
+function createConstructor(name, fieldNames) {
+    var source;
+    source = '(function Thriftify_' + name + '() {\n';
+    for (var index = 0; index < fieldNames.length; index++) {
+        var fieldName = fieldNames[index];
+        source += '    this.' + fieldName + ' = null;\n';
+    }
+    source += '})\n';
+    // eval is an operator that captures the lexical scope of the calling
+    // function and deoptimizes the lexical scope.
+    // By using eval in an expression context, it loses this second-class
+    // capability and becomes a first-class function.
+    // (0, eval) is one way to use eval in an expression context.
+    return (0, eval)(source);
+}
+
+AStruct.prototype.typeid = TYPE.STRUCT;
+
 AStruct.prototype.reify = function reify(tstruct) {
-    var result = {};
+    var result = new this.structConstructor();
     for (var index = 0; index < tstruct.fields.length; index++) {
         var tfield = tstruct.fields[index];
         var afield = this.fieldsById[tfield.id];

@@ -30,6 +30,7 @@ test('reify and uglify', function t(assert) {
     _.each([
         [
             specs.AStruct({
+                name: 'Named',
                 fields: [
                     specs.AField({id: 1, name: 'name', type: specs.AString})
                 ]
