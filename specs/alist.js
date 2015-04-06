@@ -50,7 +50,7 @@ AList.prototype.reify = function reify(tlist) {
                 element: element
             });
         }
-        list[index] = t.result;
+        list[index] = t.value;
     }
     return ret.just(list);
 };
