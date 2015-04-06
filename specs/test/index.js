@@ -67,14 +67,14 @@ test('reify and uglify', function t(assert) {
         if (t.error) {
             throw t.error;
         }
-        var raw = t.result;
+        var raw = t.value;
         debug('raw', util.inspect(raw, {colors: true, depth: 999}));
 
         var s = spec.reify(raw);
         if (s.error) {
             throw s.error;
         }
-        var back = s.result;
+        var back = s.value;
         debug('back', util.inspect(back, {colors: true, depth: 999}));
 
         assert.deepEqual(back, val);
