@@ -40,8 +40,8 @@ var str = JSON.stringify(data);
 var strRaw = new Buffer(str);
 
 var resultType = ncarSpec.getType('NCar::find_as_thrift_result');
-var uglifed = resultType.uglify(data).result;
-var reified = resultType.reify(uglifed).result;
+var uglifed = resultType.uglify(data).value;
+var reified = resultType.reify(uglifed).value;
 var output = new Buffer(bin.length);
 
 ////////////////////////////////////////////////////////////
