@@ -36,11 +36,7 @@ function fromBufferResult(buffer, spec, typeName) {
         return rawResult;
     }
     var rawValue = rawResult.value;
-    var reifiedResult = type.reify(rawValue);
-    if (reifiedResult.error) {
-        return new Result(reifiedResult.error);
-    }
-    return reifiedResult;
+    return type.reify(rawValue);
 }
 
 function toBufferResult(object, spec, typeName) {
