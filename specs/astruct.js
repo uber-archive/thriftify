@@ -24,7 +24,8 @@ var thriftrw = require('thriftrw');
 var TField = thriftrw.TField;
 var TYPE = thriftrw.TYPE;
 var util = require('util');
-var ret = require('./ret');
+var Result = require('../result');
+var SpecError = require('./error');
 
 var validNameExpression = /^[$A-Z_][0-9A-Z_$]*$/i;
 
@@ -102,20 +103,21 @@ AStruct.prototype.reify = function reify(tstruct) {
             continue;
         }
         if (afield.type.typeid !== tfield.typeid) {
-            return ret.error(new Error(util.format(
+            return new Result(SpecError(util.format(
                 'AStruct::reify expects field %d typeid %d; received %d',
                 tfield.id, afield.type.typeid, tfield.typeid)));
         }
         var t = afield.type.reify(tfield.val);
         if (t.error) {
-            return ret.chain(t, {
+            t.error.annotate({
                 type: 'astruct',
                 field: afield
             });
+            return t;
         }
         result[afield.name] = t.value;
     }
-    return ret.just(result);
+    return new Result(null, result);
 };
 
 AStruct.prototype.uglify = function uglify(struct) {
@@ -125,23 +127,24 @@ AStruct.prototype.uglify = function uglify(struct) {
         var value = struct[field.name];
         if (value == null) {
             if (field.required) {
-                return ret.error(new Error(util.format('typename %s; missing required field %s',
+                return new Result(SpecError(util.format('typename %s; missing required field %s',
                     this.name, field.name)));
             }
         } else {
             var t = field.type.uglify(value);
             if (t.error) {
-                return ret.chain(t, {
+                t.error.annotate({
                     type: 'astruct',
                     field: field
                 });
+                return t;
             }
             var tvalue = t.value;
             var tfield = new TField(field.type.typeid, field.id, tvalue);
             tstruct.fields.push(tfield);
         }
     }
-    return ret.just(tstruct);
+    return new Result(null, tstruct);
 };
 
 module.exports.AField = AField;

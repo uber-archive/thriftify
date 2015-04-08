@@ -21,7 +21,8 @@
 var thriftrw = require('thriftrw');
 var TYPE = thriftrw.TYPE;
 var util = require('util');
-var ret = require('./ret');
+var Result = require('../result');
+var SpecError = require('./error');
 
 function AInt64() {
     if (!(this instanceof AInt64)) {
@@ -32,26 +33,26 @@ function AInt64() {
 
 AInt64.prototype.reify = function reify(tobj) {
     if (!(tobj instanceof Buffer)) {
-        return ret.error(new Error(util.format('AInt64::reify expects a Buffer; received %s %s',
+        return new Result(SpecError(util.format('AInt64::reify expects a Buffer; received %s %s',
             typeof tobj, tobj.constructor.name)));
     }
     if (tobj.length !== 8) {
-        return ret.error(new Error(util.format('i64 has to be a Buffer of length 8; received length %d',
+        return new Result(SpecError(util.format('i64 has to be a Buffer of length 8; received length %d',
             tobj.length)));
     }
-    return ret.just(tobj);
+    return new Result(null, tobj);
 };
 
 AInt64.prototype.uglify = function uglify(obj) {
     if (!(obj instanceof Buffer)) {
-        return ret.error(new Error(util.format('AString::uglify expects a Buffer; received %s %s',
+        return new Result(SpecError(util.format('AString::uglify expects a Buffer; received %s %s',
             typeof obj, obj.constructor.name)));
     }
     if (obj.length !== 8) {
-        return ret.error(new Error(util.format('i64 has to be a Buffer of length 8; received length %d',
+        return new Result(SpecError(util.format('i64 has to be a Buffer of length 8; received length %d',
             obj.length)));
     }
-    return ret.just(obj);
+    return new Result(null, obj);
 };
 
 module.exports.AInt64 = AInt64;
