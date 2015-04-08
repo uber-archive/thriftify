@@ -26,6 +26,8 @@ var TYPE = thriftrw.TYPE;
 var util = require('util');
 var Result = require('../result');
 var SpecError = require('./error');
+var TStructRW = require('thriftrw').TStructRW;
+var bufrw = require('bufrw/interface');
 
 var validNameExpression = /^[$A-Z_][0-9A-Z_$]*$/i;
 
@@ -145,6 +147,26 @@ AStruct.prototype.uglify = function uglify(struct) {
         }
     }
     return new Result(null, tstruct);
+};
+
+AStruct.prototype.fromBuffer = function fromBuffer(buffer) {
+    var self = this;
+    var rawResult = bufrw.fromBufferResult(thriftrw.TStructRW, buffer);
+    if (rawResult.error) {
+        return rawResult;
+    }
+    var raw = rawResult.value;
+    return self.reify(raw);
+};
+
+AStruct.prototype.toBuffer = function toBuffer(value) {
+    var self = this;
+    var cookedResult = self.uglify(value);
+    if (cookedResult.error) {
+        return cookedResult;
+    }
+    var cooked = cookedResult.value;
+    return bufrw.toBufferResult(thriftrw.TStructRW, cooked);
 };
 
 module.exports.AField = AField;
