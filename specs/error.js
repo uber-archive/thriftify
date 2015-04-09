@@ -20,6 +20,8 @@
 
 'use strict';
 
+module.exports = SpecError;
+
 function SpecError(message) {
     var error = new Error(message);
     error.context = [];
