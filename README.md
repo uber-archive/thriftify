@@ -14,27 +14,36 @@ thrift compiler in js
 
 ```js
 var thriftify = require("thriftify");
+var path = require('path');
 
-// TODO. Show example
+/*example.thrift
+
+struct SomeStruct {
+    1:i32 someInt
+}
+struct BarResult {
+    1:bool someBool
+}
+
+service foo {
+    BarResult bar(1:string someString, 2:SomeStruct someStruct)
+}
+
+*/
+var spec = thriftify.readSpecSync(path.join(__dirname, 'example.thrift'));
+
+var buf = thriftify.toBuffer({
+    someString: 'foobar',
+    someStruct: {
+        someInt: 24
+    }
+}, spec, 'foo::bar_args');
+
+// send the `buf` over the wire somewhere
+
+var result = thriftify.fromBuffer(someBuf, spec, 'foo::bar_result');
+console.log(result.success); // { someBool: false }
 ```
-
-## Concept and Motivation
-
-// TODO. Explain what your module achieves and why.
-
-## API Documentation
-
-### `var someValue = thriftify(/*arguments*/)`
-
-<!--
-  This is a jsig notation of your interface.
-  https://github.com/jsigbiz/spec
--->
-```ocaml
-thriftify : (arg: Any) => void
-```
-
-// TODO. State what the module does.
 
 ## Installation
 
