@@ -148,13 +148,12 @@ Spec.prototype.processFunction = function processFunction(func, opts) {
     }
     if (func.throws) {
         var fields = [];
-        for (var index = 0; index < func.throws.fields; index++) {
+        for (var index = 0; index < func.throws.fields.length; index++) {
             var field = func.throws.fields[index];
-            resultFields[index] = self.parseField(field);
+            resultFields.push(self.parseField(field));
         }
     }
 
-    // TODO: add exceptions in _result struct
     this.setType(util.format('%s_result', typePrefix),
         specs.AStruct({
             name: funcName,
