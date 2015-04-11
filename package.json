@@ -74,6 +74,5 @@
       "formatStack": true
     }
   },
-  "private": true,
   "uber-ngen-version": "5.2.0"
 }
