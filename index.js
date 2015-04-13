@@ -27,12 +27,12 @@ var bufrw = require('bufrw/interface');
 
 function fromBufferResult(buffer, spec, typeName) {
     var typeResult = spec.getTypeResult(typeName);
-    if (typeResult.error) {
+    if (typeResult.err) {
         return typeResult;
     }
     var type = typeResult.value;
     var rawResult = bufrw.fromBufferResult(thriftrw.TStructRW, buffer);
-    if (rawResult.error) {
+    if (rawResult.err) {
         return rawResult;
     }
     var rawValue = rawResult.value;
@@ -41,12 +41,12 @@ function fromBufferResult(buffer, spec, typeName) {
 
 function toBufferResult(object, spec, typeName) {
     var typeResult = spec.getTypeResult(typeName);
-    if (typeResult.error) {
+    if (typeResult.err) {
         return typeResult;
     }
     var type = typeResult.value;
     var uglifiedResult = type.uglify(object);
-    if (uglifiedResult.error) {
+    if (uglifiedResult.err) {
         return uglifiedResult;
     }
     var uglified = uglifiedResult.value;

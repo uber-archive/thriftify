@@ -110,8 +110,8 @@ AStruct.prototype.reify = function reify(tstruct) {
                 tfield.id, afield.type.typeid, tfield.typeid)));
         }
         var t = afield.type.reify(tfield.val);
-        if (t.error) {
-            t.error.annotate({
+        if (t.err) {
+            t.err.annotate({
                 type: 'astruct',
                 field: afield
             });
@@ -134,8 +134,8 @@ AStruct.prototype.uglify = function uglify(struct) {
             }
         } else {
             var t = field.type.uglify(value);
-            if (t.error) {
-                t.error.annotate({
+            if (t.err) {
+                t.err.annotate({
                     type: 'astruct',
                     field: field
                 });
@@ -152,7 +152,7 @@ AStruct.prototype.uglify = function uglify(struct) {
 AStruct.prototype.fromBuffer = function fromBuffer(buffer) {
     var self = this;
     var rawResult = bufrw.fromBufferResult(thriftrw.TStructRW, buffer);
-    if (rawResult.error) {
+    if (rawResult.err) {
         return rawResult;
     }
     var raw = rawResult.value;
@@ -162,7 +162,7 @@ AStruct.prototype.fromBuffer = function fromBuffer(buffer) {
 AStruct.prototype.toBuffer = function toBuffer(value) {
     var self = this;
     var cookedResult = self.uglify(value);
-    if (cookedResult.error) {
+    if (cookedResult.err) {
         return cookedResult;
     }
     var cooked = cookedResult.value;

@@ -65,15 +65,15 @@ test('reify and uglify', function t(assert) {
         var val = pair[1];
 
         var t = spec.uglify(val);
-        if (t.error) {
-            throw t.error;
+        if (t.err) {
+            throw t.err;
         }
         var raw = t.value;
         debug('raw', util.inspect(raw, {colors: true, depth: 999}));
 
         var s = spec.reify(raw);
-        if (s.error) {
-            throw s.error;
+        if (s.err) {
+            throw s.err;
         }
         var back = s.value;
         debug('back', util.inspect(back, {colors: true, depth: 999}));
