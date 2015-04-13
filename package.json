@@ -1,6 +1,6 @@
 {
   "name": "thriftify",
-  "version": "1.0.0-alpha10",
+  "version": "1.0.0-alpha11",
   "description": "thrift compiler in js",
   "keywords": [],
   "author": "Lei Zhao <leizha@uber.com>",
