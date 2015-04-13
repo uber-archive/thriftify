@@ -56,8 +56,8 @@ AMap.prototype.reify = function reify(tmap) {
         var t;
         var pair = tmap.pairs[index];
         t = this.ktype.reify(pair.key);
-        if (t.error) {
-            t.error.annotate({
+        if (t.err) {
+            t.err.annotate({
                 type: 'amap',
                 key: pair.key
             });
@@ -68,8 +68,8 @@ AMap.prototype.reify = function reify(tmap) {
             return new Result(SpecError(util.format('duplicate key %s', key)));
         }
         t = this.vtype.reify(pair.val);
-        if (t.error) {
-            t.error.annotate({
+        if (t.err) {
+            t.err.annotate({
                 type: 'amap',
                 val: pair.val
             });
@@ -91,8 +91,8 @@ AMap.prototype.uglify = function uglify(map) {
     for (var index = 0; index < keys.length; index++) {
         var key = keys[index];
         var t = this.ktype.uglify(key);
-        if (t.error) {
-            t.error.annotate({
+        if (t.err) {
+            t.err.annotate({
                 type: 'amap',
                 key: key
             });
@@ -100,8 +100,8 @@ AMap.prototype.uglify = function uglify(map) {
         }
         var value = map[key];
         var s = this.vtype.uglify(value);
-        if (s.error) {
-            s.error.annotate({
+        if (s.err) {
+            s.err.annotate({
                 type: 'amap',
                 value: value
             });

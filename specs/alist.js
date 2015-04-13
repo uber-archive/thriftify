@@ -44,8 +44,8 @@ AList.prototype.reify = function reify(tlist) {
     for (var index = 0; index < tlist.elements.length; index++) {
         var element = tlist.elements[index];
         var t = this.etype.reify(element);
-        if (t.error) {
-            t.error.annotate({
+        if (t.err) {
+            t.err.annotate({
                 type: 'alist',
                 index: index,
                 element: element
@@ -67,8 +67,8 @@ AList.prototype.uglify = function uglify(list) {
     for (var index = 0; index < list.length; index++) {
         var element = list[index];
         var t = this.etype.uglify(element);
-        if (t.error) {
-            t.error.annotate({
+        if (t.err) {
+            t.err.annotate({
                 type: 'alist',
                 index: index,
                 element: element
