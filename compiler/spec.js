@@ -127,38 +127,24 @@ Spec.prototype.processFunction = function processFunction(func, opts) {
 
     var typePrefix = util.format('%s::%s', opts.serviceName, funcName);
 
-    var fields = [];
-    for (var index = 0; index < func.fields.length; index++) {
-        var field = func.fields[index];
-        fields[index] = self.parseField(field);
-    }
-
     this.setType(
         util.format('%s_args', typePrefix),
         specs.AStruct({
             name: funcName,
-            fields: fields
+            fields: func.fields.map(function eachField(field) {
+                return self.parseField(field);
+            })
         }));
 
-    var resultFields = [];
-    if (func.ft !== 'void') {
-        resultFields.push(
-            specs.AField({id: 0, name: 'success', type: this.lookupType(func.ft)})
-        );
-    }
-    if (func.throws) {
-        var fields = [];
-        for (var index = 0; index < func.throws.fields.length; index++) {
-            var field = func.throws.fields[index];
-            resultFields.push(self.parseField(field));
-        }
-    }
-
-    this.setType(util.format('%s_result', typePrefix),
-        specs.AStruct({
-            name: funcName,
-            fields: resultFields
-        }));
+    this.setType(
+        util.format('%s_result', typePrefix),
+        specs.AResult(
+            funcName,
+            func.ft === 'void' ? null : this.lookupType(func.ft),
+            func.throws && func.throws.fields.map(function eachThrown(field) {
+                return self.parseField(field);
+            })
+        ));
 };
 
 Spec.prototype.processEnum = function processEnum(e) {
