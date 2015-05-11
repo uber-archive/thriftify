@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "coveralls": "^2.10.0",
+    "hexer": "^1.4.5",
     "istanbul": "^0.3.5",
     "itape": "^1.5.0",
     "lint-trap": "^1.0.0",

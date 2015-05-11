@@ -21,14 +21,14 @@
 'use strict';
 
 var thriftify = require('./');
-var debug = require('debug')('test');
+var hex = require('hexer');
 
 var scope = thriftify.compileFileSync('example1.thrift');
 var T = scope.types.getByName('Simple1');
-debug('spec', T);
+console.log('type:', T);
 
 var buf = T.toBuffer({int1: 123}).toValue();
-debug('buf', buf);
+console.log('toBuffer:\n' + hex(buf));
 
 var obj = T.fromBuffer(buf).toValue();
-debug('obj', obj);
+console.log('fromBuffer:\n' + JSON.stringify(obj, null, 4));
