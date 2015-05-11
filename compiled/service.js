@@ -52,3 +52,12 @@ function Service(scope, def) {
         self.functions.push(cfunc);
     }
 }
+
+Service.prototype.wrapFunction = function wrapFunction(funcName, func) {
+    var self = this;
+    var cfunc = self.functions[funcName];
+    if (!cfunc) {
+        throw new Error('no such function declaration'); // TODO typed error
+    }
+    return cfunc.wrap(func);
+};

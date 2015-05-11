@@ -43,6 +43,24 @@ function CFunc(scope, serviceName, def) {
     });
 }
 
+CFunc.prototype.wrap = function wrap(func) {
+    var self = this;
+    function thriftifyWrapper(buffer, callback) {
+        var res = self.args.fromBufer(buffer);
+        if (res.err) return callback(res.err, null);
+        func(res.value, encodeResult);
+        function encodeResult(err, name, value) {
+            if (err) {
+                // TODO: try to map err to declared throws
+                callback(err, null);
+            } else {
+                var res = self.result.toBuffer([name || 'success', value]);
+                callback(res.err, res.value);
+            }
+        }
+    }
+};
+
 function resultFields(def) {
     var fields = def.throws || [];
     var ret = resultFieldDef(def);
