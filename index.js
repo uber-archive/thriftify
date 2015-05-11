@@ -21,7 +21,7 @@
 'use strict';
 
 var Spec = require('./compiler/spec');
-var grammar = require('./compiler/grammar');
+var grammar = require('./grammar');
 var thriftrw = require('thriftrw');
 var bufrw = require('bufrw/interface');
 
