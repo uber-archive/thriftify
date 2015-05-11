@@ -30,7 +30,6 @@ module.exports = Types;
 
 var TBooleanRW = thriftrw.BooleanRW;
 var TSpecListRW = thriftrw.SpecListRW;
-var TSpecMapRW = thriftrw.SpecMapRW;
 
 function Types() {
     var self = this;
@@ -121,7 +120,17 @@ Types.prototype.resolve = function resolve(def) {
         case 'Map': // Map<K, V>
             var K = self.resolve(def.left);
             var V = self.resolve(def.right);
-            var maprw = new TSpecMapRW(K.typeid, K.rw, V.typeid, V.rw);
+
+            var maprw = null;
+
+            if (K.name === 'string') {
+                maprw = new thriftrw.SpecMapObjRW(K.typeid, K.rw, V.typeid, V.rw);
+            // TODO } else if (IS DEF ANNOTATED TO WANT A MAP) {
+            // TODO     maprw = new thriftrw.SpecMapRW(FIXME_MAP_CONS, K.typeid, K.rw, V.typeid, V.rw);
+            } else {
+                maprw = new thriftrw.SpecMapPairsRW(K.typeid, K.rw, V.typeid, V.rw);
+            }
+
             return {
                 typeid: TYPE.MAP,
                 rw: maprw
