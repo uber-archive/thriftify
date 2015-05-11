@@ -37,41 +37,49 @@ function Types() {
     self.byName = {};
 
     self.byName.bool = {
+        name: 'bool',
         typeid: TYPE.BOOL,
         rw: TBooleanRW
     };
 
     self.byName.byte = {
+        name: 'byte',
         typeid: TYPE.BYTE,
         rw: bufrw.UInt8
     };
 
     self.byName.i16 = {
+        name: 'i16',
         typeid: TYPE.I16,
         rw: bufrw.Int16BE
     };
 
     self.byName.i32 = {
+        name: 'i32',
         typeid: TYPE.I32,
         rw: bufrw.Int32BE
     };
 
     self.byName.i64 = {
+        name: 'i64',
         typeid: TYPE.I64,
         rw: bufrw.FixedWidth(8)
     };
 
     self.byName.double = {
+        name: 'double',
         typeid: TYPE.DOUBLE,
         rw: bufrw.DoubleBE
     };
 
     self.byName.binary = {
+        name: 'binary',
         typeid: TYPE.STRING,
         rw: bufrw.VariableBuffer(bufrw.UInt32BE)
     };
 
     self.byName.string = {
+        name: 'string',
         typeid: TYPE.STRING,
         rw: bufrw.String(bufrw.UInt32BE)
     };
