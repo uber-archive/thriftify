@@ -20,15 +20,18 @@
 
 'use strict';
 
-var thriftify = require('./');
-var debug = require('debug')('test');
+var Types = require('./types');
 
-var scope = thriftify.compileFileSync('example1.thrift');
-var T = scope.types.getByName('Simple1');
-debug('spec', T);
+module.exports = Scope;
 
-var buf = T.toBuffer({int1: 123}).toValue();
-debug('buf', buf);
+function Scope() {
+    var self = this;
+    self.services = {};
+    self.types = new Types();
+}
 
-var obj = T.fromBuffer(buf).toValue();
-debug('obj', obj);
+// for compatability with old spec shape
+Scope.prototype.getType = function getType(name) {
+    var self = this;
+    return self.types.getByName(name);
+};

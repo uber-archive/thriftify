@@ -20,15 +20,35 @@
 
 'use strict';
 
-var thriftify = require('./');
-var debug = require('debug')('test');
+var util = require('util');
 
-var scope = thriftify.compileFileSync('example1.thrift');
-var T = scope.types.getByName('Simple1');
-debug('spec', T);
+var CFunc = require('./cfunc');
 
-var buf = T.toBuffer({int1: 123}).toValue();
-debug('buf', buf);
+module.exports = Service;
 
-var obj = T.fromBuffer(buf).toValue();
-debug('obj', obj);
+function Service(scope, def) {
+    var self = this;
+    self.name = def.id.name;
+    self.funcNames = [];
+    self.functions = [];
+
+    if (scope.services[self.name]) {
+        throw new Error(util.format(
+            'service %s already exists',
+            self.name));
+    }
+    scope.services[self.name] = self;
+
+    for (var i = 0; i < def.functions.length; i++) {
+        var func = def.functions[i];
+        var funcName = func.id.name;
+        if (self.funcNames.indexOf(funcName) >= 0) {
+            throw new Error(util.format(
+                'service %s function %s already exists',
+                self.name, funcName));
+        }
+        var cfunc = new CFunc(scope, self.name, func);
+        self.funcNames.push(cfunc.name);
+        self.functions.push(cfunc);
+    }
+}

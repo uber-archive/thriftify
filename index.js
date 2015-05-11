@@ -22,6 +22,7 @@
 
 var Spec = require('./compiler/spec');
 var grammar = require('./grammar');
+var _compile = require('./compiled').compile;
 var thriftrw = require('thriftrw');
 var bufrw = require('bufrw/interface');
 
@@ -87,6 +88,31 @@ function readSpec(specFile, callback) {
         callback(null, spec);
     }
 }
+
+function compileFileSync(specFile) {
+    var syntax = grammar.parseFileSync(specFile);
+    return _compile(syntax);
+}
+
+function compileFile(specFile, callback) {
+    grammar.parseFile(specFile, handleSource);
+    function handleSource(err, syntax) {
+        if (err) {
+            return callback(err);
+        }
+        var scope = _compile(syntax);
+        callback(null, scope);
+    }
+}
+
+function compile(source) {
+    var syntax = grammar.parse(source);
+    return _compile(syntax);
+}
+
+module.exports.compileFileSync = compileFileSync;
+module.exports.compileFile = compileFile;
+module.exports.compile = compile;
 
 module.exports.fromBufferResult = fromBufferResult;
 module.exports.toBufferResult = toBufferResult;

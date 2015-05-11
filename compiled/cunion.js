@@ -20,15 +20,38 @@
 
 'use strict';
 
-var thriftify = require('./');
-var debug = require('debug')('test');
+var bufrw = require('bufrw');
+var thriftrw = require('thriftrw');
 
-var scope = thriftify.compileFileSync('example1.thrift');
-var T = scope.types.getByName('Simple1');
-debug('spec', T);
+var CField = require('./cstruct').CField;
 
-var buf = T.toBuffer({int1: 123}).toValue();
-debug('buf', buf);
+module.exports.CUnion = CUnion;
 
-var obj = T.fromBuffer(buf).toValue();
-debug('obj', obj);
+function CUnion(scope, def) {
+    var self = this;
+    self.name = def.id && def.id.name || '';
+    self.fields = [];
+
+    var fieldNames = Object.keys(def.fields);
+    for (var i = 0; i < fieldNames.length; i++) {
+        var fieldDef = def.fields[fieldNames[i]];
+        self.fields[i] = new CField(scope, fieldDef);
+    }
+
+    self.typeid = thriftrw.TYPE.STRUCT;
+    self.rw = new thriftrw.SpecStructRW(self.name, self.fields);
+
+    if (self.name) {
+        scope.types.define(self.name, self);
+    }
+}
+
+CUnion.prototype.fromBuffer = function fromBuffer(buffer) {
+    var self = this;
+    return bufrw.fromBufferResult(self.rw, buffer);
+};
+
+CUnion.prototype.toBuffer = function toBuffer(value) {
+    var self = this;
+    return bufrw.toBufferResult(self.rw, value);
+};

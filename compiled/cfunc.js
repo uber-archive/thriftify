@@ -20,15 +20,46 @@
 
 'use strict';
 
-var thriftify = require('./');
-var debug = require('debug')('test');
+var CStruct = require('./cstruct').CStruct;
+var CUnion = require('./cunion').CUnion;
 
-var scope = thriftify.compileFileSync('example1.thrift');
-var T = scope.types.getByName('Simple1');
-debug('spec', T);
+module.exports = CFunc;
 
-var buf = T.toBuffer({int1: 123}).toValue();
-debug('buf', buf);
+function CFunc(scope, serviceName, def) {
+    var self = this;
+    self.name = def.id.name;
+    var prefix = serviceName + '::' + self.name;
+    self.args = new CStruct(scope, {
+        id: {
+            name: prefix + '_args',
+        },
+        fields: def.fields
+    });
+    self.result = new CUnion(scope, {
+        id: {
+            name: prefix + '_result',
+        },
+        fields: resultFields(def)
+    });
+}
 
-var obj = T.fromBuffer(buf).toValue();
-debug('obj', obj);
+function resultFields(def) {
+    var fields = def.throws || [];
+    var ret = resultFieldDef(def);
+    if (ret) fields.unshift(ret);
+    return fields;
+}
+
+function resultFieldDef(def) {
+    if (def.ft !== 'void') {
+        return {
+            fid: 0,
+            id: {
+                name: 'success',
+            },
+            fieldType: def.ft
+        };
+    } else {
+        return null;
+    }
+}
