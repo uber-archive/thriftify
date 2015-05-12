@@ -61,8 +61,7 @@ function CField(scope, def) {
     var self = this;
     self.name = def.id.name;
     self.id = def.fid;
-    self.typeid = T.typeid;
-    self.rw = T.rw;
+    self.type = T;
 
     // TODO: handle required and defaultValue
     self.required = false;

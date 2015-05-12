@@ -111,32 +111,12 @@ Types.prototype.resolve = function resolve(def) {
 
         case 'List': // List<T>
             var T = self.resolve(def.fieldType);
-            var listrw = new TSpecListRW(T);
-            return {
-                name: 'List<' + T.name + '>',
-                typeid: TYPE.LIST,
-                rw: listrw
-            };
+            return new CList(T);
 
         case 'Map': // Map<K, V>
             var K = self.resolve(def.left);
             var V = self.resolve(def.right);
-
-            var maprw = null;
-
-            if (K.name === 'string') {
-                maprw = new thriftrw.SpecMapObjRW(K, V);
-            // TODO } else if (IS DEF ANNOTATED TO WANT A MAP) {
-            // TODO     maprw = new thriftrw.SpecMapRW(FIXME_MAP_CONS, K, V);
-            } else {
-                maprw = new thriftrw.SpecMapPairsRW(K, V);
-            }
-
-            return {
-                name: 'Map<' + K.name + ', ' + V.name + '>',
-                typeid: TYPE.MAP,
-                rw: maprw
-            };
+            return new CMap(K, V);
 
         // TODO:
         // - const
@@ -148,4 +128,20 @@ Types.prototype.resolve = function resolve(def) {
     }
 };
 
+function CList(T) {
+    this.name = 'List<' + T.name + '>';
+    this.typeid = TYPE.LIST;
+    this.rw = new TSpecListRW(T);
+}
 
+function CMap(K, V) {
+    this.name = 'Map<' + K.name + ', ' + V.name + '>';
+    this.typeid = TYPE.MAP;
+    if (K.name === 'string') {
+        this.maprw = new thriftrw.SpecMapObjRW(K, V);
+    } else {
+        this.maprw = new thriftrw.SpecMapPairsRW(K, V);
+    }
+    // TODO use es6-map version:
+    // this.maprw = new thriftrw.SpecMapRW(FIXME_MAP_CONS, K, V);
+}
