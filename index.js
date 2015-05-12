@@ -20,80 +20,30 @@
 
 'use strict';
 
-var Spec = require('./compiler/spec');
-var grammar = require('./compiler/grammar');
-var thriftrw = require('thriftrw');
-var bufrw = require('bufrw/interface');
+var grammar = require('./grammar');
+var _compile = require('./compiled').compile;
 
-function fromBufferResult(buffer, spec, typeName) {
-    var typeResult = spec.getTypeResult(typeName);
-    if (typeResult.err) {
-        return typeResult;
-    }
-    var type = typeResult.value;
-    var rawResult = bufrw.fromBufferResult(thriftrw.TStructRW, buffer);
-    if (rawResult.err) {
-        return rawResult;
-    }
-    var rawValue = rawResult.value;
-    return type.reify(rawValue);
-}
-
-function toBufferResult(object, spec, typeName) {
-    var typeResult = spec.getTypeResult(typeName);
-    if (typeResult.err) {
-        return typeResult;
-    }
-    var type = typeResult.value;
-    var uglifiedResult = type.uglify(object);
-    if (uglifiedResult.err) {
-        return uglifiedResult;
-    }
-    var uglified = uglifiedResult.value;
-    return bufrw.toBufferResult(thriftrw.TStructRW, uglified);
-}
-
-function fromBuffer(buffer, spec, typename) {
-    return fromBufferResult(buffer, spec, typename).toValue();
-}
-
-function toBuffer(obj, spec, typename) {
-    return toBufferResult(obj, spec, typename).toValue();
-}
-
-function createSpec(syntax) {
-    var spec = new Spec();
-    spec.processProgram(syntax);
-    return spec;
-}
-
-function parseSpec(source) {
-    var syntax = grammar.parse(source);
-    return createSpec(syntax);
-}
-
-function readSpecSync(specFile) {
+function compileFileSync(specFile) {
     var syntax = grammar.parseFileSync(specFile);
-    return createSpec(syntax);
+    return _compile(syntax);
 }
 
-function readSpec(specFile, callback) {
+function compileFile(specFile, callback) {
     grammar.parseFile(specFile, handleSource);
     function handleSource(err, syntax) {
         if (err) {
             return callback(err);
         }
-        var spec = createSpec(syntax);
-        callback(null, spec);
+        var scope = _compile(syntax);
+        callback(null, scope);
     }
 }
 
-module.exports.fromBufferResult = fromBufferResult;
-module.exports.toBufferResult = toBufferResult;
-module.exports.fromBuffer = fromBuffer;
-module.exports.toBuffer = toBuffer;
-module.exports.readSpecSync = readSpecSync;
-module.exports.readSpec = readSpec;
-module.exports.parseSpec = parseSpec;
+function compile(source) {
+    var syntax = grammar.parse(source);
+    return _compile(syntax);
+}
 
-module.exports.newSpec = readSpecSync; // XXX deprecated
+module.exports.compileFileSync = compileFileSync;
+module.exports.compileFile = compileFile;
+module.exports.compile = compile;

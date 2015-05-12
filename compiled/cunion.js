@@ -18,41 +18,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var thriftrw = require('thriftrw');
-var TYPE = thriftrw.TYPE;
-var util = require('util');
-var Result = require('../result');
-var SpecError = require('./error');
+'use strict';
 
-function AInt64() {
-    if (!(this instanceof AInt64)) {
-        return new AInt64();
+var bufrw = require('bufrw');
+var thriftrw = require('thriftrw');
+
+var CField = require('./cstruct').CField;
+
+module.exports.CUnion = CUnion;
+
+function CUnion(scope, def) {
+    var self = this;
+    self.name = def.id && def.id.name || '';
+    self.fields = [];
+
+    var fieldNames = Object.keys(def.fields);
+    for (var i = 0; i < fieldNames.length; i++) {
+        var fieldDef = def.fields[fieldNames[i]];
+        self.fields[i] = new CField(scope, fieldDef);
     }
-    this.typeid = TYPE.I64;
+
+    self.typeid = thriftrw.TYPE.STRUCT;
+    self.rw = new thriftrw.SpecStructRW(self.name, self.fields);
+
+    if (self.name) {
+        scope.types.define(self.name, self);
+    }
 }
 
-AInt64.prototype.reify = function reify(tobj) {
-    if (!(tobj instanceof Buffer)) {
-        return new Result(SpecError(util.format('AInt64::reify expects a Buffer; received %s %s',
-            typeof tobj, tobj.constructor.name)));
-    }
-    if (tobj.length !== 8) {
-        return new Result(SpecError(util.format('i64 has to be a Buffer of length 8; received length %d',
-            tobj.length)));
-    }
-    return new Result(null, tobj);
+CUnion.prototype.fromBuffer = function fromBuffer(buffer) {
+    var self = this;
+    return bufrw.fromBufferResult(self.rw, buffer);
 };
 
-AInt64.prototype.uglify = function uglify(obj) {
-    if (!(obj instanceof Buffer)) {
-        return new Result(SpecError(util.format('AString::uglify expects a Buffer; received %s %s',
-            typeof obj, obj.constructor.name)));
-    }
-    if (obj.length !== 8) {
-        return new Result(SpecError(util.format('i64 has to be a Buffer of length 8; received length %d',
-            obj.length)));
-    }
-    return new Result(null, obj);
+CUnion.prototype.toBuffer = function toBuffer(value) {
+    var self = this;
+    return bufrw.toBufferResult(self.rw, value);
 };
-
-module.exports.AInt64 = AInt64;

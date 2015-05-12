@@ -20,50 +20,70 @@
 
 'use strict';
 
+var bufrw = require('bufrw');
 var TYPE = require('thriftrw/TYPE');
-var Result = require('../result');
-var SpecError = require('./error');
 
-module.exports.AEnum = AEnum;
+module.exports = CEnum;
 
-function AEnum(definitions) {
-    this.namesToValues = {};
-    this.valuesToNames = {};
+function CEnum(scope, def) {
+    var self = this;
+    self.name = self.id.name;
+    self.typeid = TYPE.I32;
+    self.rw = bufrw.Base(
+        bufrw.UInt32BE.byteLength,
+        readEnumFrom,
+        writeEnumInto);
+    self.rw.width = bufrw.UInt32BE.width;
+    self.namesToValues = {};
+    self.valuesToNames = {};
+
+    var definitions = def.enumDefinitions;
+
     var value = 0;
     for (var index = 0; index < definitions.length; index++) {
         var definition = definitions[index];
         var name = definition.id.name;
-        value = definition.value != null ? definition.value : value;
-        if (this.namesToValues[name] !== undefined) {
+        value = definition.value !== null ? definition.value : value;
+        if (self.namesToValues[name] !== undefined) {
             throw new Error('Can\'t create enum with duplicate name ' + name + ' for value ' + value);
         }
         if (value > 0x7fffffff) {
             throw new Error('Can\'t create enum with value out of bounds ' + value + ' for name ' + name);
         }
-        this.namesToValues[name] = value;
-        this.valuesToNames[value] = name;
+        self.namesToValues[name] = value;
+        self.valuesToNames[value] = name;
         value++;
+    }
+
+    scope.types.define(self.name, self);
+
+    function readEnumFrom(buffer, offset) {
+        return self.readFrom(buffer, offset);
+    }
+
+    function writeEnumInto(value, buffer, offset) {
+        return self.writeInto(value, buffer, offset);
     }
 }
 
-AEnum.prototype.typeid = TYPE.I32;
-
-AEnum.prototype.reify = function reify(value) {
-    if (typeof value !== 'number') {
-        return new Result(SpecError('Can\'t decode ' + typeof value + ' for enum, number expected'));
+CEnum.prototype.readFrom = function readFrom(buffer, offset) {
+    var self = this;
+    var res = bufrw.UInt32BE.readFrom(buffer, offset);
+    if (!res.err) {
+        res.value = self.valuesToNames[res.value];
+        if (res.value === undefined) {
+            res.err = new Error('invalid enum value'); // TODO: typed error
+        }
     }
-    if (this.valuesToNames[value] === undefined) {
-        return new Result(SpecError('Can\'t decode unknown value for enum ' + value));
-    }
-    return new Result(null, this.valuesToNames[value]);
+    return res;
 };
 
-AEnum.prototype.uglify = function uglify(name) {
-    if (typeof name !== 'string') {
-        return new Result(SpecError('Can\'t encode ' + typeof name + ' for enum, string expected'));
+CEnum.prototype.writeInto = function writeInto(value, buffer, offset) {
+    var self = this;
+    value = self.namesToValues[value];
+    if (value === undefined) {
+        return bufrw.WriteResult.error(new Error('invalid enum name'), offset); // TODO: typed error
+    } else {
+        return bufrw.UInt32BE.writeInto(value, buffer, offset);
     }
-    if (this.namesToValues[name] === undefined) {
-        return new Result(SpecError('Can\'t encode unknown name for enum ' + name));
-    }
-    return new Result(null, this.namesToValues[name]);
 };

@@ -18,33 +18,52 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var thriftrw = require('thriftrw');
-var TYPE = thriftrw.TYPE;
-var util = require('util');
-var Result = require('../result');
-var SpecError = require('./error');
+'use strict';
 
-function ABinary() {
-    if (!(this instanceof ABinary)) {
-        return new ABinary();
+var bufrw = require('bufrw');
+var thriftrw = require('thriftrw');
+
+module.exports.CStruct = CStruct;
+module.exports.CField = CField;
+
+function CStruct(scope, def) {
+    var self = this;
+    self.name = def.id && def.id.name || '';
+    self.fields = [];
+
+    var fieldNames = Object.keys(def.fields);
+    for (var i = 0; i < fieldNames.length; i++) {
+        var fieldDef = def.fields[fieldNames[i]];
+        self.fields[i] = new CField(scope, fieldDef);
     }
-    this.typeid = TYPE.STRING;
+
+    self.typeid = thriftrw.TYPE.STRUCT;
+    self.rw = new thriftrw.SpecStructRW(self.name, self.fields);
+
+    if (self.name) {
+        scope.types.define(self.name, self);
+    }
 }
 
-ABinary.prototype.reify = function reify(tobj) {
-    if (!(tobj instanceof Buffer)) {
-        return new Result(SpecError(util.format('ABinary::reify expects a Buffer; received %s %s',
-            typeof tobj, tobj.constructor.name)));
-    }
-    return new Result(null, tobj);
+CStruct.prototype.fromBuffer = function fromBuffer(buffer) {
+    var self = this;
+    return bufrw.fromBufferResult(self.rw, buffer);
 };
 
-ABinary.prototype.uglify = function uglify(obj) {
-    if (!(obj instanceof Buffer)) {
-        return new Result(SpecError(util.format('AString::uglify expects a Buffer; received %s %s',
-            typeof obj, obj.constructor.name)));
-    }
-    return new Result(null, obj);
+CStruct.prototype.toBuffer = function toBuffer(value) {
+    var self = this;
+    return bufrw.toBufferResult(self.rw, value);
 };
 
-module.exports.ABinary = ABinary;
+function CField(scope, def) {
+    var T = scope.types.resolve(def.fieldType);
+
+    var self = this;
+    self.name = def.id.name;
+    self.id = def.fid;
+    self.type = T;
+
+    // TODO: handle required and defaultValue
+    self.required = false;
+    self.defaultValue = null;
+}

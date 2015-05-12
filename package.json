@@ -19,13 +19,14 @@
   "dependencies": {
     "pegjs": "^0.8.0",
     "lodash": "^3.5.0",
-    "thriftrw": "v1.0.0-beta3",
+    "thriftrw": "uber/thriftrw#specd",
     "bufrw": "^0.9.19",
     "debug": "^2.1.3",
     "error": "^6.0.0"
   },
   "devDependencies": {
     "coveralls": "^2.10.0",
+    "hexer": "^1.4.5",
     "istanbul": "^0.3.5",
     "itape": "^1.5.0",
     "lint-trap": "^1.0.0",

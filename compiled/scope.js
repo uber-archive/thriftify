@@ -18,7 +18,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var t = require('../../');
-var path = require('path');
-var spec = t.newSpec(path.join(__dirname, 'demo.thrift'));
-console.log('spec', spec);
+'use strict';
+
+var Types = require('./types');
+
+module.exports = Scope;
+
+function Scope() {
+    var self = this;
+    self.services = {};
+    self.types = new Types();
+}
+
+// for compatability with old spec shape
+Scope.prototype.getType = function getType(name) {
+    var self = this;
+    return self.types.getByName(name);
+};

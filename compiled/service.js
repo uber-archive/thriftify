@@ -18,33 +18,46 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var thriftrw = require('thriftrw');
-var TYPE = thriftrw.TYPE;
-var util = require('util');
-var Result = require('../result');
-var SpecError = require('./error');
+'use strict';
 
-function ABoolean() {
-    if (!(this instanceof ABoolean)) {
-        return new ABoolean();
+var util = require('util');
+
+var CFunc = require('./cfunc');
+
+module.exports = Service;
+
+function Service(scope, def) {
+    var self = this;
+    self.name = def.id.name;
+    self.funcNames = [];
+    self.functions = [];
+
+    if (scope.services[self.name]) {
+        throw new Error(util.format(
+            'service %s already exists',
+            self.name));
     }
-    this.typeid = TYPE.BOOL;
+    scope.services[self.name] = self;
+
+    for (var i = 0; i < def.functions.length; i++) {
+        var func = def.functions[i];
+        var funcName = func.id.name;
+        if (self.funcNames.indexOf(funcName) >= 0) {
+            throw new Error(util.format(
+                'service %s function %s already exists',
+                self.name, funcName));
+        }
+        var cfunc = new CFunc(scope, self.name, func);
+        self.funcNames.push(cfunc.name);
+        self.functions.push(cfunc);
+    }
 }
 
-ABoolean.prototype.reify = function reify(tobj) {
-    if (typeof tobj !== 'number') {
-        return new Result(SpecError(util.format('ABoolean::reify expects a number; received %s %s',
-            typeof tobj, tobj.constructor.name)));
+Service.prototype.wrapFunction = function wrapFunction(funcName, func) {
+    var self = this;
+    var cfunc = self.functions[funcName];
+    if (!cfunc) {
+        throw new Error('no such function declaration'); // TODO typed error
     }
-    return new Result(null, Boolean(tobj));
+    return cfunc.wrap(func);
 };
-
-ABoolean.prototype.uglify = function uglify(obj) {
-    if (typeof obj !== 'boolean') {
-        return new Result(SpecError(util.format('ABoolean::uglify expects a boolean; received %s %s',
-            typeof obj, obj.constructor.name)));
-    }
-    return new Result(null, Number(obj));
-};
-
-module.exports.ABoolean = ABoolean;
