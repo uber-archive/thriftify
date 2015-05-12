@@ -111,8 +111,9 @@ Types.prototype.resolve = function resolve(def) {
 
         case 'List': // List<T>
             var T = self.resolve(def.fieldType);
-            var listrw = new TSpecListRW(T.typeid, T.rw);
+            var listrw = new TSpecListRW(T);
             return {
+                name: 'List<' + T.name + '>',
                 typeid: TYPE.LIST,
                 rw: listrw
             };
@@ -124,14 +125,15 @@ Types.prototype.resolve = function resolve(def) {
             var maprw = null;
 
             if (K.name === 'string') {
-                maprw = new thriftrw.SpecMapObjRW(K.typeid, K.rw, V.typeid, V.rw);
+                maprw = new thriftrw.SpecMapObjRW(K, V);
             // TODO } else if (IS DEF ANNOTATED TO WANT A MAP) {
-            // TODO     maprw = new thriftrw.SpecMapRW(FIXME_MAP_CONS, K.typeid, K.rw, V.typeid, V.rw);
+            // TODO     maprw = new thriftrw.SpecMapRW(FIXME_MAP_CONS, K, V);
             } else {
-                maprw = new thriftrw.SpecMapPairsRW(K.typeid, K.rw, V.typeid, V.rw);
+                maprw = new thriftrw.SpecMapPairsRW(K, V);
             }
 
             return {
+                name: 'Map<' + K.name + ', ' + V.name + '>',
                 typeid: TYPE.MAP,
                 rw: maprw
             };
