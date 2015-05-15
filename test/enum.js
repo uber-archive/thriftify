@@ -33,6 +33,16 @@ tape('round trip an enum', function t(assert) {
     assert.end();
 });
 
+tape('round trip an enum (non-string)', function t(assert) {
+    var enumSpec = thriftify.readSpecSync(path.join(__dirname, 'enum.thrift'));
+    var MyEnum3 = enumSpec.types.MyEnum3;
+    var inStruct = {me2_2: null, me3_n2: null, me3_d1: MyEnum3.ME3_D1};
+    var buffer = thriftify.toBuffer(inStruct, enumSpec, 'MyStruct');
+    var outStruct = thriftify.fromBuffer(buffer, enumSpec, 'MyStruct');
+    assert.deepEquals(outStruct, inStruct);
+    assert.end();
+});
+
 tape('first enum is 0 by default', function t(assert) {
     var enumSpec = thriftify.readSpecSync(path.join(__dirname, 'enum.thrift'));
     var inStruct = {me2_2: null, me3_n2: null, me3_d1: 'ME3_0'};

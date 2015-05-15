@@ -42,6 +42,7 @@ function AEnum(definitions) {
         }
         this.namesToValues[name] = value;
         this.valuesToNames[value] = name;
+        this[name] = name;
         value++;
     }
 }
