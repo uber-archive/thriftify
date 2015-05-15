@@ -105,6 +105,13 @@ tape('throws on name collision', function t(assert) {
     assert.end();
 });
 
+tape('throws on reserved name', function t(assert) {
+    assert.throws(function throws() {
+        thriftify.readSpecSync(path.join(__dirname, 'enum-reserved.thrift'));
+    });
+    assert.end();
+});
+
 tape('throws on overflow', function t(assert) {
     assert.throws(function throws() {
         thriftify.readSpecSync(path.join(__dirname, 'enum-overflow.thrift'));

@@ -22,10 +22,9 @@
  */
 
 enum MyEnum {
-    A
-    A
+    hasOwnProperty
 }
 
 struct MyStruct {
-  1: MyEnum enum = MyEnum.A
+  1: MyEnum enum = MyEnum.hasOwnProperty
 }
