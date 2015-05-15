@@ -26,7 +26,8 @@ var tape = require('tape');
 
 tape('round trip an enum', function t(assert) {
     var enumSpec = thriftify.readSpecSync(path.join(__dirname, 'enum.thrift'));
-    var inStruct = {me2_2: null, me3_n2: null, me3_d1: 'ME3_D1'};
+    var types = enumSpec.types;
+    var inStruct = {me2_2: null, me3_n2: null, me3_d1: types.MyEnum3.ME3_D1};
     var buffer = thriftify.toBuffer(inStruct, enumSpec, 'MyStruct');
     var outStruct = thriftify.fromBuffer(buffer, enumSpec, 'MyStruct');
     assert.deepEquals(outStruct, inStruct);

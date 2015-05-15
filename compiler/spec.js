@@ -37,7 +37,7 @@ function Types() {
     this.i32 = specs.AInt32;
     this.i64 = specs.AInt64;
     this.double = specs.ADouble;
-};
+}
 
 function Spec() {
     this.types = new Types();
