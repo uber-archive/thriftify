@@ -20,6 +20,24 @@
 
 'use strict';
 
-require('../specs/test');
-require('./enum');
-require('./typedef');
+var path = require('path');
+var thriftify = require('../');
+var test = require('tape');
+
+test('It should support typedefs', function t(assert) {
+    var typedefSpec = thriftify.readSpecSync(path.join(__dirname, 'typedef.thrift'));
+    var inStruct = {
+        bar: 'DONT PANIC'
+    };
+    var buffer = thriftify.toBuffer(inStruct, typedefSpec, 'MyStruct');
+    var outStruct = thriftify.fromBuffer(buffer, typedefSpec, 'MyStruct');
+    assert.deepEquals(outStruct, inStruct);
+    assert.end();
+});
+
+test('It should not add a typedef for an invalid type', function t(assert) {
+    assert.throws(function testTypedef() {
+        thriftify.readSpecSync(path.join(__dirname, 'typedef-invalid.thrift'));
+    });
+    assert.end();
+});

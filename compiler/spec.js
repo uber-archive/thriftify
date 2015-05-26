@@ -37,7 +37,19 @@ function Types() {
     this.i32 = specs.AInt32;
     this.i64 = specs.AInt64;
     this.double = specs.ADouble;
+    this.typedefs = {};
 }
+
+Types.prototype.addTypedef = function addTypedef(type, alias) {
+    if (!this[type]) {
+        throw new Error(util.format('unknown type %s for typedef', type));
+    }
+    this.typedefs[alias] = type;
+};
+
+Types.prototype.lookupTypedef = function lookupTypedef(alias) {
+    return this.typedefs[alias];
+};
 
 function Spec() {
     this.types = new Types();
@@ -51,10 +63,14 @@ Spec.prototype.getType = function getType(name) {
 
 Spec.prototype.getTypeResult = function getType(name) {
     var type = this.types[name];
-    if (!type) {
-        return new Result(new Error(util.format('type %s not found', name)));
+    if (type) {
+        return new Result(null, type);
     }
-    return new Result(null, type);
+    var typedef = this.types.lookupTypedef(name);
+    if (typedef) {
+        return new Result(null, this.types[typedef]);
+    }
+    return new Result(new Error(util.format('type %s not found', name)));
 };
 
 Spec.prototype.setType = function setType(name, type) {
@@ -174,6 +190,10 @@ Spec.prototype.processService = function processService(service) {
     }
 };
 
+Spec.prototype.processTypedef = function processTypedef(typedef) {
+    this.types.addTypedef(typedef.definitionType.name, typedef.id.name);
+};
+
 Spec.prototype.processProgram = function(root) {
     if (root.type !== 'Program') {
         throw new Error('expects type Program; received ' + root.type);
@@ -195,8 +215,11 @@ Spec.prototype.processProgram = function(root) {
             case 'Enum':
                 self.processEnum(def);
                 break;
+            case 'Typedef':
+                self.processTypedef(def);
+                break;
             default:
-                throw new Error('definition type is not supported' + def.type);
+                throw new Error('definition type is not supported:' + def.type);
         }
     }
 };
