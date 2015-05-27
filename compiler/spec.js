@@ -37,7 +37,7 @@ function Types() {
     this.i32 = specs.AInt32;
     this.i64 = specs.AInt64;
     this.double = specs.ADouble;
-}
+};
 
 function Spec() {
     this.types = new Types();
@@ -73,7 +73,6 @@ Spec.prototype.setTypeResult = function setType(name, type) {
 Spec.prototype.lookupType = function lookupType(t) {
     // TODO: handle const
     // TODO: handle typedef
-    // TODO: Implement Set semantics
     if (t.type === 'Identifier') {
         return this.getType(t.name);
     } else if (t.type === 'List') {

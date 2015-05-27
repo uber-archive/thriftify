@@ -20,14 +20,15 @@
 
 'use strict';
 
-var util = require('util');
 var thriftrw = require('thriftrw');
-
+var TYPE = thriftrw.TYPE;
+var util = require('util');
 var AList = require('./alist').AList;
 var Result = require('../result');
 var SpecError = require('./error');
-
-var TYPE = thriftrw.TYPE;
+var bufrw = require('bufrw/interface');
+var uniq = require('uniq');
+var bufferEqual = require('buffer-equal');
 
 function ASet(etype) {
     if (!(this instanceof ASet)) {
@@ -37,8 +38,47 @@ function ASet(etype) {
     this.etype = etype;
 }
 
-// TODO: Imeplment set semantics
-
 util.inherits(ASet, AList);
+
+ASet.prototype.uglify = function uglify(list) {
+    var self = this;
+    if (!Array.isArray(list)) {
+        return new Result(SpecError(
+            'ASet::uglify expects an array; received type %s %s val %s',
+            typeof list, list.constructor.name, util.inspect(list)));
+    }
+
+    var tlist = thriftrw.TList(this.etype.typeid);
+    var listUglified = list.map(function uglify(item) {
+       return self.etype.uglify(item);
+    });
+
+    // If there are any errors, return the first.
+    var errors = listUglified.filter(function findErrors(item) {
+        return Boolean(item.err);
+    });
+    if (errors.length) {
+        var error = errors[0].err;
+        error.annotate({
+            type: 'aset'
+        });
+        return new Result(error);
+    }
+
+    var values = listUglified.map(function getValue(item) {
+        return item.value;
+    });
+
+    tlist.elements = uniq(values, function compare(a, b) {
+        var aAsBuffer = bufrw.toBufferResult(thriftrw.getRW(self.etype.typeid), a).value;
+        var bAsBuffer = bufrw.toBufferResult(thriftrw.getRW(self.etype.typeid), b).value;
+        if (bufferEqual(aAsBuffer, bAsBuffer)) {
+           return 0;
+        }
+        return 1;
+    });
+
+    return new Result(null, tlist);
+};
 
 module.exports.ASet = ASet;
