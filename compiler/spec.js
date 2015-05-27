@@ -25,6 +25,12 @@ var specs = require('../specs');
 var debug = require('debug')('compiler');
 var owns = Object.prototype.hasOwnProperty;
 var Result = require('../result');
+var TypedError = require('error/typed');
+
+var NotImplementedError = TypedError({
+    type: 'not.implemented',
+    message: 'Cannot use {feature}. Not implemented'
+});
 
 // The types structure starts with the default types, and devolves into a
 // dictionary of type declarations.
@@ -191,6 +197,11 @@ Spec.prototype.processService = function processService(service) {
 };
 
 Spec.prototype.processTypedef = function processTypedef(typedef) {
+    if (!typedef.definitionType.name) {
+        throw NotImplementedError({
+            feature: 'Compunds typedefs (list, map, set)'
+        });
+    }
     this.types.addTypedef(typedef.definitionType.name, typedef.id.name);
 };
 

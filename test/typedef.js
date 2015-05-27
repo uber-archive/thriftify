@@ -35,6 +35,13 @@ test('It should support typedefs', function t(assert) {
     assert.end();
 });
 
+test('It should throw a not implemented error for compound typedefs', function t(assert) {
+    assert.throws(function() {
+        var typedefSpec = thriftify.readSpecSync(path.join(__dirname, 'typedef-compound.thrift'));
+    }, /NotImplemented/);
+    assert.end();
+});
+
 test('It should not add a typedef for an invalid type', function t(assert) {
     assert.throws(function testTypedef() {
         thriftify.readSpecSync(path.join(__dirname, 'typedef-invalid.thrift'));
