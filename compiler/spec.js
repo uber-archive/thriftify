@@ -37,7 +37,7 @@ function Types() {
     this.i32 = specs.AInt32;
     this.i64 = specs.AInt64;
     this.double = specs.ADouble;
-};
+}
 
 function Spec() {
     this.types = new Types();
@@ -73,11 +73,13 @@ Spec.prototype.setTypeResult = function setType(name, type) {
 Spec.prototype.lookupType = function lookupType(t) {
     // TODO: handle const
     // TODO: handle typedef
-    // TODO: handle Set
+    // TODO: Implement Set semantics
     if (t.type === 'Identifier') {
         return this.getType(t.name);
     } else if (t.type === 'List') {
         return specs.AList(this.lookupType(t.fieldType));
+    } else if (t.type === 'Set') {
+        return specs.ASet(this.lookupType(t.fieldType));
     } else if (t.type === 'Map') {
         return specs.AMap(this.lookupType(t.left), this.lookupType(t.right));
     } else {

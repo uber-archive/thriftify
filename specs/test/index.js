@@ -42,6 +42,14 @@ test('reify and uglify', function t(assert) {
             [1, 2, 3]
         ],
         [
+            specs.ASet(specs.AStruct({
+                fields: [
+                  specs.AField({id: 1, name: 'foo', type: specs.AInt32})
+                ]
+            })),
+            [{foo: 1}, {foo: 2}]
+        ],
+        [
             specs.AStruct({
                 fields: [
                     specs.AField({id: 1, name: 'a', type: specs.AString}),

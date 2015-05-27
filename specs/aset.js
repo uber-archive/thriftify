@@ -20,27 +20,25 @@
 
 'use strict';
 
+var util = require('util');
 var thriftrw = require('thriftrw');
+
+var AList = require('./alist').AList;
+var Result = require('../result');
+var SpecError = require('./error');
+
 var TYPE = thriftrw.TYPE;
 
-module.exports.ABoolean = require('./aboolean').ABoolean();
+function ASet(etype) {
+    if (!(this instanceof ASet)) {
+        return new ASet(etype);
+    }
+    this.typeid = TYPE.SET;
+    this.etype = etype;
+}
 
-var AInteger = require('./ainteger').AInteger;
-module.exports.AByte = AInteger(TYPE.BYTE);
-module.exports.AInt16 = AInteger(TYPE.I16);
-module.exports.AInt32 = AInteger(TYPE.I32);
+// TODO: Imeplment set semantics
 
-module.exports.ADouble = require('./adouble').ADouble();
+util.inherits(ASet, AList);
 
-module.exports.AInt64 = require('./aint64').AInt64();
-
-module.exports.AString = require('./astring').AString();
-module.exports.ABinary = require('./abinary').ABinary();
-
-module.exports.AMap = require('./amap').AMap;
-module.exports.AList = require('./alist').AList;
-module.exports.ASet = require('./aset').ASet;
-module.exports.AField = require('./astruct').AField;
-module.exports.AStruct = require('./astruct').AStruct;
-module.exports.AEnum = require('./aenum').AEnum;
-module.exports.AResult = require('./aresult').AResult;
+module.exports.ASet = ASet;
