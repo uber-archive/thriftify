@@ -57,10 +57,10 @@ Spec.prototype.getType = function getType(name) {
 
 Spec.prototype.getTypeResult = function getType(name) {
     var type = this.types[name];
-    if (type) {
-        return new Result(null, type);
+    if (!type) {
+        return new Result(new Error(util.format('type %s not found', name)));
     }
-    return new Result(new Error(util.format('type %s not found', name)));
+    return new Result(null, type);
 };
 
 Spec.prototype.setType = function setType(name, type) {
