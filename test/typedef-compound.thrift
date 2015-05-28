@@ -22,7 +22,7 @@
  */
 
 typedef string uuid;
-typedef map<i32, uuid> foo;
+typedef map<string, uuid> foo;
 
 struct MyStruct {
   1: required foo bar;

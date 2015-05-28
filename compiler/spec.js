@@ -43,19 +43,7 @@ function Types() {
     this.i32 = specs.AInt32;
     this.i64 = specs.AInt64;
     this.double = specs.ADouble;
-    this.typedefs = {};
 }
-
-Types.prototype.addTypedef = function addTypedef(type, alias) {
-    if (!this[type]) {
-        throw new Error(util.format('unknown type %s for typedef', type));
-    }
-    this.typedefs[alias] = type;
-};
-
-Types.prototype.lookupTypedef = function lookupTypedef(alias) {
-    return this.typedefs[alias];
-};
 
 function Spec() {
     this.types = new Types();
@@ -71,10 +59,6 @@ Spec.prototype.getTypeResult = function getType(name) {
     var type = this.types[name];
     if (type) {
         return new Result(null, type);
-    }
-    var typedef = this.types.lookupTypedef(name);
-    if (typedef) {
-        return new Result(null, this.types[typedef]);
     }
     return new Result(new Error(util.format('type %s not found', name)));
 };
@@ -94,7 +78,6 @@ Spec.prototype.setTypeResult = function setType(name, type) {
 
 Spec.prototype.lookupType = function lookupType(t) {
     // TODO: handle const
-    // TODO: handle typedef
     // TODO: Implement Set semantics
     if (t.type === 'Identifier') {
         return this.getType(t.name);
@@ -197,12 +180,11 @@ Spec.prototype.processService = function processService(service) {
 };
 
 Spec.prototype.processTypedef = function processTypedef(typedef) {
-    if (!typedef.definitionType.name) {
-        throw NotImplementedError({
-            feature: 'Compunds typedefs (list, map, set)'
-        });
+    var targetType = this.lookupType(typedef.definitionType);
+    if (!targetType) {
+        throw new Error(util.format('unknown type %s', typedef.definitionType.name));
     }
-    this.types.addTypedef(typedef.definitionType.name, typedef.id.name);
+    this.setType(typedef.id.name, targetType);
 };
 
 Spec.prototype.processProgram = function(root) {
@@ -230,7 +212,9 @@ Spec.prototype.processProgram = function(root) {
                 self.processTypedef(def);
                 break;
             default:
-                throw new Error('definition type is not supported:' + def.type);
+                throw new NotImplementedError({
+                    feature: def.type
+                });
         }
     }
 };

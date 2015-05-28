@@ -35,10 +35,16 @@ test('It should support typedefs', function t(assert) {
     assert.end();
 });
 
-test('It should throw a not implemented error for compound typedefs', function t(assert) {
-    assert.throws(function() {
-        var typedefSpec = thriftify.readSpecSync(path.join(__dirname, 'typedef-compound.thrift'));
-    }, /NotImplemented/);
+test('It should support compound typedefs', function t(assert) {
+    var typedefSpec = thriftify.readSpecSync(path.join(__dirname, 'typedef-compound.thrift'));
+    var inStruct = {
+        bar: {
+            'dont': 'panic'
+        }
+    };
+    var buffer = thriftify.toBuffer(inStruct, typedefSpec, 'MyStruct');
+    var outStruct = thriftify.fromBuffer(buffer, typedefSpec, 'MyStruct');
+    assert.deepEquals(outStruct, inStruct);
     assert.end();
 });
 
