@@ -27,21 +27,25 @@ var SpecError = require('./error');
 module.exports.AEnum = AEnum;
 
 function AEnum(definitions) {
-    this.namesToValues = {};
-    this.valuesToNames = {};
+    this._namesToValues = {};
+    this._valuesToNames = {};
     var value = 0;
     for (var index = 0; index < definitions.length; index++) {
         var definition = definitions[index];
         var name = definition.id.name;
         value = definition.value != null ? definition.value : value;
-        if (this.namesToValues[name] !== undefined) {
+        if (this[name] !== undefined) {
+            throw new Error('Can\'t create enum with reserved name ' + name);
+        }
+        if (this._namesToValues[name] !== undefined) {
             throw new Error('Can\'t create enum with duplicate name ' + name + ' for value ' + value);
         }
         if (value > 0x7fffffff) {
             throw new Error('Can\'t create enum with value out of bounds ' + value + ' for name ' + name);
         }
-        this.namesToValues[name] = value;
-        this.valuesToNames[value] = name;
+        this._namesToValues[name] = value;
+        this._valuesToNames[value] = name;
+        this[name] = name;
         value++;
     }
 }
@@ -52,18 +56,18 @@ AEnum.prototype.reify = function reify(value) {
     if (typeof value !== 'number') {
         return new Result(SpecError('Can\'t decode ' + typeof value + ' for enum, number expected'));
     }
-    if (this.valuesToNames[value] === undefined) {
+    if (this._valuesToNames[value] === undefined) {
         return new Result(SpecError('Can\'t decode unknown value for enum ' + value));
     }
-    return new Result(null, this.valuesToNames[value]);
+    return new Result(null, this._valuesToNames[value]);
 };
 
 AEnum.prototype.uglify = function uglify(name) {
     if (typeof name !== 'string') {
         return new Result(SpecError('Can\'t encode ' + typeof name + ' for enum, string expected'));
     }
-    if (this.namesToValues[name] === undefined) {
+    if (this._namesToValues[name] === undefined) {
         return new Result(SpecError('Can\'t encode unknown name for enum ' + name));
     }
-    return new Result(null, this.namesToValues[name]);
+    return new Result(null, this._namesToValues[name]);
 };
