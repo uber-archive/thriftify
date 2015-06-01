@@ -22,3 +22,4 @@
 
 require('../specs/test');
 require('./enum');
+require('./typedef');

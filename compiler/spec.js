@@ -25,6 +25,12 @@ var specs = require('../specs');
 var debug = require('debug')('compiler');
 var owns = Object.prototype.hasOwnProperty;
 var Result = require('../result');
+var TypedError = require('error/typed');
+
+var NotImplementedError = TypedError({
+    type: 'not.implemented',
+    message: 'Cannot use {feature}. Not implemented'
+});
 
 // The types structure starts with the default types, and devolves into a
 // dictionary of type declarations.
@@ -72,7 +78,6 @@ Spec.prototype.setTypeResult = function setType(name, type) {
 
 Spec.prototype.lookupType = function lookupType(t) {
     // TODO: handle const
-    // TODO: handle typedef
     // TODO: Implement Set semantics
     if (t.type === 'Identifier') {
         return this.getType(t.name);
@@ -174,6 +179,14 @@ Spec.prototype.processService = function processService(service) {
     }
 };
 
+Spec.prototype.processTypedef = function processTypedef(typedef) {
+    var targetType = this.lookupType(typedef.definitionType);
+    if (!targetType) {
+        throw new Error(util.format('unknown type %s', typedef.definitionType.name));
+    }
+    this.setType(typedef.id.name, targetType);
+};
+
 Spec.prototype.processProgram = function(root) {
     if (root.type !== 'Program') {
         throw new Error('expects type Program; received ' + root.type);
@@ -195,8 +208,13 @@ Spec.prototype.processProgram = function(root) {
             case 'Enum':
                 self.processEnum(def);
                 break;
+            case 'Typedef':
+                self.processTypedef(def);
+                break;
             default:
-                throw new Error('definition type is not supported' + def.type);
+                throw new NotImplementedError({
+                    feature: def.type
+                });
         }
     }
 };
