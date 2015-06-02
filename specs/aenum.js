@@ -27,6 +27,10 @@ var SpecError = require('./error');
 module.exports.AEnum = AEnum;
 
 function AEnum(definitions) {
+    if (!(this instanceof AEnum)) {
+        return new AEnum(definitions);
+    }
+
     this.namesToValues = {};
     this.valuesToNames = {};
     var value = 0;
