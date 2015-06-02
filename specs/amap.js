@@ -27,6 +27,7 @@ var util = require('util');
 var owns = Object.prototype.hasOwnProperty;
 var Result = require('../result');
 var SpecError = require('./error');
+var AString = require('./astring').AString;
 
 function AMap(ktype, vtype) {
     if (!(this instanceof AMap)) {
@@ -34,8 +35,13 @@ function AMap(ktype, vtype) {
     }
     this.typeid = TYPE.MAP;
 
-    if (ktype.typeid !== TYPE.STRING && ktype.typeid !== TYPE.I32) {
-        throw new Error(util.format('key type has to be TYPE.STRING or TYPE.I32; received %d', ktype.typeid));
+    // Treat numeric keys types as strings as all object properties are strings in JavaScript
+    if (ktype.typeid === TYPE.I32) {
+        ktype = AString();
+    }
+
+    if (ktype.typeid !== TYPE.STRING) {
+        throw new Error(util.format('key type has to be TYPE.STRING ; received %d', ktype.typeid));
     }
     this.ktype = ktype;
     this.vtype = vtype;
