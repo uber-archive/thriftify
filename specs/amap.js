@@ -34,8 +34,8 @@ function AMap(ktype, vtype) {
     }
     this.typeid = TYPE.MAP;
 
-    if (ktype.typeid !== TYPE.STRING) {
-        throw new Error('key type has to be TYPE.STRING; received %d', ktype.typeid);
+    if (ktype.typeid !== TYPE.STRING && ktype.typeid !== TYPE.I32) {
+        throw new Error(util.format('key type has to be TYPE.STRING or TYPE.I32; received %d', ktype.typeid));
     }
     this.ktype = ktype;
     this.vtype = vtype;

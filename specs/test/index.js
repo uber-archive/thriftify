@@ -42,6 +42,17 @@ test('reify and uglify', function t(assert) {
             [1, 2, 3]
         ],
         [
+            specs.AMap(specs.AString, specs.AInt32),
+            {foo: 1, bar: 2}
+        ],
+        [
+            specs.AMap(specs.AEnum([
+                    {id: {name: 'foo'}, value: 1},
+                    {id: {name: 'bar'}, value: 2}
+                ]), specs.AInt32),
+            {foo: 1, bar: 2}
+        ],
+        [
             specs.ASet(specs.AStruct({
                 fields: [
                   specs.AField({id: 1, name: 'foo', type: specs.AInt32})
