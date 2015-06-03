@@ -104,9 +104,9 @@ test('reify and uglify', function t(assert) {
             }),
             {a: 'hello', b: 123, x: {c: '[', d: ']'}}
         ]
-    ], function each(pair) {
-        var spec = pair[0];
-        var val = pair[1];
+    ], function each(triple) {
+        var spec = triple[0];
+        var val = triple[1];
 
         var t = spec.uglify(val);
         if (t.err) {
@@ -124,13 +124,11 @@ test('reify and uglify', function t(assert) {
 
         assert.deepEqual(back, val);
 
-
-        if(pair[2]) {
-            debugger;
-            var rwObj = pair[2];
-            var re = spec.reify(rwObj);
-            var ug = spec.uglify(re.value);
-            assert.deepEqual(rwObj, ug.value);
+        if(triple[2]) {
+            var thriftRWObj = triple[2];
+            var reified = spec.reify(thriftRWObj);
+            var uglified = spec.uglify(reified.value);
+            assert.deepEqual(thriftRWObj, uglified.value);
         }
     });
     assert.end();
