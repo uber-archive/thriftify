@@ -25,6 +25,7 @@ var _ = require('lodash');
 var test = require('tape');
 var debug = require('debug')('test');
 var util = require('util');
+var thriftrw = require('thriftrw');
 
 test('reify and uglify', function t(assert) {
     _.each([
@@ -35,26 +36,40 @@ test('reify and uglify', function t(assert) {
                     specs.AField({id: 1, name: 'name', type: specs.AString})
                 ]
             }),
-            {name: 'lol'}
+            {name: 'lol'},
+            thriftrw.TStruct([thriftrw.TField(thriftrw.TYPE.STRING, 1, new Buffer([108, 111, 108]))])
         ],
         [
             specs.AList(specs.AInt32),
-            [1, 2, 3]
+            [1, 2, 3],
+            thriftrw.TList(thriftrw.TYPE.I32, [1, 2, 3])
         ],
         [
             specs.AMap(specs.AString, specs.AInt32),
-            {foo: 1, bar: 2}
+            {foo: 1, bar: 2},
+            thriftrw.TMap(thriftrw.TYPE.STRING, thriftrw.TYPE.I32, [
+                thriftrw.TPair(new Buffer([102, 111, 111]), 1),
+                thriftrw.TPair(new Buffer([97, 98, 114]), 2)
+            ])
         ],
         [
             specs.AMap(specs.AEnum([
                     {id: {name: 'foo'}, value: 1},
                     {id: {name: 'bar'}, value: 2}
                 ]), specs.AInt32),
-            {foo: 1, bar: 2}
+            {foo: 1, bar: 2},
+            thriftrw.TMap(thriftrw.TYPE.I32, thriftrw.TYPE.I32, [
+                thriftrw.TPair(new Buffer([102, 111, 111]), 1),
+                thriftrw.TPair(new Buffer([97, 98, 114]), 2)
+            ])
         ],
         [
             specs.AMap(specs.AInt32, specs.AString),
-            {1: 'foo', 2: 'bar'}
+            {1: 'foo', 2: 'bar'},
+            thriftrw.TMap(thriftrw.TYPE.I32, thriftrw.TYPE.STRING, [
+                thriftrw.TPair(1, new Buffer([102, 111, 111])),
+                thriftrw.TPair(2, new Buffer([97, 98, 114]))
+            ])
         ],
         [
             specs.ASet(specs.AStruct({
@@ -62,7 +77,13 @@ test('reify and uglify', function t(assert) {
                   specs.AField({id: 1, name: 'foo', type: specs.AInt32})
                 ]
             })),
-            [{foo: 1}, {foo: 2}]
+            [{foo: 1}, {foo: 2}],
+            thriftrw.TList(
+                thriftrw.TYPE.STRUCT, [
+                  thriftrw.TStruct([thriftrw.TField(thriftrw.TYPE.I32, 1, 1)]),
+                  thriftrw.TStruct([thriftrw.TField(thriftrw.TYPE.I32, 1, 2)])
+                ]
+            )
         ],
         [
             specs.AStruct({
@@ -102,6 +123,15 @@ test('reify and uglify', function t(assert) {
         debug('back', util.inspect(back, {colors: true, depth: 999}));
 
         assert.deepEqual(back, val);
+
+
+        if(pair[2]) {
+            debugger;
+            var rwObj = pair[2];
+            var re = spec.reify(rwObj);
+            var ug = spec.uglify(re.value);
+            assert.deepEqual(rwObj, ug.value);
+        }
     });
     assert.end();
 });

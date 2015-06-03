@@ -48,6 +48,16 @@ function AMap(ktype, vtype) {
 }
 
 AMap.prototype.reify = function reify(tmap) {
+
+    // re-ify maps of I32 as string keys for JS.
+    if(tmap.ktypeid === TYPE.I32) {
+        tmap.ktypeid = TYPE.STRING;
+        tmap.pairs = tmap.pairs.map(function itos(pair) {
+            pair.key = new Buffer(String(pair.key));
+            return pair;
+        });
+    }
+
     if (this.ktype.typeid !== tmap.ktypeid) {
         return new Result(SpecError(util.format('AMap::reify expects ktypeid %d; received %d',
             this.ktype.typeid, tmap.ktypeid)));
