@@ -97,7 +97,12 @@ Spec.prototype.parseField = function parseField(f) {
     var fieldType = this.lookupType(f.fieldType);
     var fieldId = f.fid;
 
-    return specs.AField({id: fieldId, name: fieldName, type: fieldType});
+    return specs.AField({
+        id: fieldId,
+        name: fieldName,
+        type: fieldType,
+        required: f.req === 'required'
+    });
 };
 
 Spec.prototype.processStruct = function processStruct(s) {

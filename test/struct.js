@@ -20,7 +20,15 @@
 
 'use strict';
 
-require('../specs/test');
-require('./enum');
-require('./typedef');
-require('./struct');
+var path = require('path');
+var thriftify = require('../index.js');
+var test = require('tape');
+
+test('check field required/optional', function t(assert) {
+    thriftify.readSpec(path.join(__dirname, 'struct.thrift'), function verify(err, structSpec) {
+        if (err) return assert.end(err);
+        assert.equal(structSpec.types.Simple1.fieldsByName.int1.required, true);
+        assert.equal(structSpec.types.Simple1.fieldsByName.int2.required, false);
+        assert.end();
+    });
+});
