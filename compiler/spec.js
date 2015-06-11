@@ -101,7 +101,7 @@ Spec.prototype.parseField = function parseField(f) {
         id: fieldId,
         name: fieldName,
         type: fieldType,
-        required: (f.req === 'required') ? true : false
+        required: f.req === 'required'
     });
 };
 
