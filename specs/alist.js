@@ -59,9 +59,9 @@ AList.prototype.reify = function reify(tlist) {
 
 AList.prototype.uglify = function uglify(list) {
     if (!Array.isArray(list)) {
-        return new Result(SpecError(
+        return new Result(SpecError(util.format(
             'AList::uglify expects an array; received type %s %s val %s',
-            typeof list, list.constructor.name, util.inspect(list)));
+            typeof list, list.constructor.name, util.inspect(list))));
     }
     var tlist = thriftrw.TList(this.etype.typeid);
     for (var index = 0; index < list.length; index++) {
