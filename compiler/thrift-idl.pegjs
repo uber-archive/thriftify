@@ -239,8 +239,8 @@ ConstValuePair
   = k:ConstValue ':' v:ConstValue ListSeparator?
 
 Struct
-  = 'struct' __ id:Identifier xsdAll? __ '{' __ fs:Field* __ '}' __ {
-    return new Struct(id, fs);
+  = 'struct' __ id:Identifier xsdAll? __ '{' __ fs:Field* __ '}' __ ta:TypeAnnotations? {
+    return new Struct(id, fs, ta);
   }
 
 Union
@@ -288,8 +288,8 @@ throwz
 
 Field
   = _ fid:FieldIdentifier req:FieldRequiredness? ft:FieldType id:Identifier FieldValue?
-    XsdFieldOptions? ListSeparator? {
-      return new Field(id, ft, fid, req);
+    XsdFieldOptions? ta:TypeAnnotations? ListSeparator? {
+      return new Field(id, ft, fid, req, ta);
     }
 
 FieldIdentifier
@@ -354,7 +354,9 @@ cppType
   = 'cpp_type' __ i:Literal
 
 TypeAnnotations
-  = '(' __ TypeAnnotation* __ ')' __
+  = '(' __ ta:TypeAnnotation* __ ')' __ {
+    return ta;
+  }
 
 TypeAnnotation
   = id:Identifier '=' __ l:Literal ListSeparator? {
