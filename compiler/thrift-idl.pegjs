@@ -6,10 +6,11 @@
     }
     Namespace.prototype.type = 'Namespace';
 
-    function BaseType(type, annotations) {
-        this.type = type;
+    function Primitive(type, annotations) {
+        this.primitiveType = type;
         this.annotations = annotations;
     }
+    Primitive.prototype.type = 'Primitive';
 
     function Enum(id, definitions, annotations) {
         this.id = id;
@@ -331,19 +332,19 @@ FunctionType
   / FieldType
 
 FieldType
-  = BaseType
+  = Primitive
   / ContainerType
   / Identifier
 
 XsdFieldOptions
   = xsdOptional? xsdNillable? xsdAttributes?
 
-BaseType
-  = t:BaseTypeName __ ta:TypeAnnotations? {
-    return new BaseType(t, ta);
+Primitive
+  = t:PrimitiveName __ ta:TypeAnnotations? {
+    return new Primitive(t, ta);
   }
 
-BaseTypeName
+PrimitiveName
   = 'bool'
   / 'byte'
   / 'i16'

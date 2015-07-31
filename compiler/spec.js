@@ -87,8 +87,8 @@ Spec.prototype.lookupType = function lookupType(t) {
         return specs.ASet(this.lookupType(t.fieldType));
     } else if (t.type === 'Map') {
         return specs.AMap(this.lookupType(t.left), this.lookupType(t.right));
-    } else if (this.types[t.type]) {
-        return this.types[t.type];
+    } else if (t.type === 'Primitive') {
+        return this.types[t.primitiveType];
     } else {
         throw new Error(util.format('unknown type %s', t.type));
     }
