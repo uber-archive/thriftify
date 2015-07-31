@@ -18,10 +18,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+
 'use strict';
 
-require('../specs/test');
-require('./enum');
-require('./typedef');
-require('./struct');
-require('./thrift-idl');
+var idl = require('../compiler/grammar');
+var fs = require('fs');
+var path = require('path');
+var test = require('tape');
+
+var extension = '.thrift';
+var filenames = fs.readdirSync(__dirname);
+for (var index = 0; index < filenames.length; index++) {
+    var filename = filenames[index];
+    var fullFilename = path.join(__dirname, filename);
+    if (filename.indexOf(extension, filename.length - extension.length) > 0) {
+        var source = fs.readFileSync(fullFilename, 'ascii');
+        test('parse ' + filename, function t(assert) {
+            try {
+                idl.parse(source);
+                assert.end();
+            } catch (err) {
+                assert.end(err);
+            }
+        });
+    }
+}
+
