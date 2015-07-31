@@ -1,20 +1,34 @@
 {
 
-    function Enum(id, definitions) {
+    function Namespace(id, scope) {
+        this.id = id;
+        this.scope = scope;
+    }
+    Namespace.prototype.type = 'Namespace';
+
+    function BaseType(type, annotations) {
+        this.type = type;
+        this.annotations = annotations;
+    }
+
+    function Enum(id, definitions, annotations) {
         this.id = id;
         this.enumDefinitions = definitions;
+        this.annotations = annotations;
     }
     Enum.prototype.type = 'Enum';
 
-    function EnumDefinition(id, value) {
+    function EnumDefinition(id, value, annotations) {
         this.id = id;
         this.value = value;
+        this.annotations = annotations;
     }
     EnumDefinition.prototype.type = 'EnumDefinition';
 
-    function Senum(id, definitions) {
+    function Senum(id, definitions, annotations) {
         this.id = id;
         this.senumDefinitions = definitions;
+        this.annotations = annotations;
     }
     Senum.prototype.type = 'Senum';
 
@@ -37,23 +51,26 @@
     }
     Union.prototype.type = 'Union';
 
-    function Exception(id, fields) {
+    function Exception(id, fields, annotations) {
         this.id = id;
         this.fields = fields;
+        this.annotations = annotations;
     }
     Exception.prototype.type = 'Exception';
 
-    function Service(id, functions) {
+    function Service(id, functions, annotations) {
         this.id = id;
         this.functions = functions;
+        this.annotations = annotations;
     }
     Service.prototype.type = 'Service';
 
-    function FunctionDescription(id, fields, ft, _throws) {
+    function FunctionDescription(id, fields, ft, _throws, annotations) {
         this.id = id;
         this.ft = ft; // TODO rename functionType
         this.fields = fields;
         this.throws = _throws;
+        this.annotations = annotations;
     }
     FunctionDescription.prototype.type = 'function';
 
@@ -141,13 +158,13 @@ CppInclude
   = CppIncludeToken Literal
 
 Namespace
-  = NamespaceToken scope:NamespaceScope __ id:Identifier { return { type: 'Namespace', scope: scope, id: id } }
+  = NamespaceToken scope:NamespaceScope __ id:Identifier { return new Namespace(id, scope); }
   / NamespaceToken 'smalltalk.category' __ STIdentifier
   / NamespaceToken 'smalltalk.prefix' __ Identifier
   / 'php_namespace' __ Literal
   / 'xsd_namespace' __ Literal
-  / NamespaceToken scope:'*' __ Identifier { console.warn('No generator for', scope); return; }
-  / NamespaceToken scope:Identifier id:Identifier { console.warn('No generator for', scope); return; }
+  / NamespaceToken scope:'*' __ Identifier { return; }
+  / NamespaceToken scope:Identifier id:Identifier { return; }
 
 NamespaceScope
   = 'cpp'
@@ -178,11 +195,12 @@ Definition
   / Service
 
 Typedef
-  = TypedefToken __ dt:DefinitionType id:Identifier ListSeparator? {
+  = TypedefToken __ dt:DefinitionType id:Identifier ta:TypeAnnotations? ListSeparator? {
     return {
       type: 'Typedef',
       definitionType: dt,
-      id: id
+      id: id,
+      typeAnnotations: ta
     }
   }
 
@@ -197,18 +215,18 @@ ListSeparator 'list separator'
   = CommaOrSemicolon
 
 Enum
-  = EnumToken __ id:Identifier __ '{' __ ed:EnumDefinition* __ '}' __ {
-    return new Enum(id, ed);
+  = EnumToken __ id:Identifier __ '{' __ ed:EnumDefinition* __ '}' __ ta:TypeAnnotations? {
+    return new Enum(id, ed, ta);
   }
 
 EnumDefinition
-  = id:Identifier value:('=' __ v:IntConstant { return v.value })? __ ListSeparator? __ {
-    return new EnumDefinition(id, value);
+  = id:Identifier value:('=' __ v:IntConstant { return v.value })? __ ta:TypeAnnotations? ListSeparator? __ {
+    return new EnumDefinition(id, value, ta);
   }
 
 Senum
-  = SenumToken id:Identifier '{' __ ss:SenumDefinition* '}' {
-    return new Senum(id, ss);
+  = SenumToken id:Identifier '{' __ ss:SenumDefinition* '}' __ ta:TypeAnnotations? {
+    return new Senum(id, ss, ta);
   }
 
 SenumDefinition
@@ -220,23 +238,22 @@ Const
   }
 
 ConstValue
-  = DoubleConstant
-  / IntConstant
-  / Literal /* StringLiteral */
-  / Identifier
-  / ConstList
+  = ConstList
   / ConstMap
+  / StringLiteral
+  / NumberLiteral
+  / Identifier
 
 ConstList
-  = '[' __ values:(v:ConstValue ListSeparator? {return v})* __ ']' __ {
+  = '[' __ values:(v:ConstValue __ ListSeparator? __ { return v} )* ']' __ {
     return values
   }
 
 ConstMap
-  = '{' (ConstValuePair)* '}'
+  = '{' __ (ConstValuePair)* '}' __
 
 ConstValuePair
-  = k:ConstValue ':' v:ConstValue ListSeparator?
+  = k:ConstValue __ ':' __ v:ConstValue __ ListSeparator?
 
 Struct
   = 'struct' __ id:Identifier xsdAll? __ '{' __ fs:Field* __ '}' __ ta:TypeAnnotations? {
@@ -261,21 +278,21 @@ xsdAttributes
   = 'xsd_attributes' __ '{' __ Field* __ '}' __
 
 Exception
-  = 'exception' __ id:Identifier '{' __ fs:Field* __ '}' __ {
-    return new Exception(id, fs);
+  = 'exception' __ id:Identifier '{' __ fs:Field* __ '}' __ ta:TypeAnnotations? __ {
+    return new Exception(id, fs, ta);
   }
 
 Service
-  = 'service' __ id:Identifier extends? '{' __ fns:function* __ '}' __ {
-    return new Service(id, fns);
+  = 'service' __ id:Identifier extends? '{' __ fns:function* __ '}' __ ta:TypeAnnotations? {
+    return new Service(id, fns, ta);
   }
 
 extends
   = 'extends' __ Identifier
 
 function
-  = __ oneway? ft:FunctionType id:Identifier '(' __ fs:Field* __ ')' __ ts:throwz? ListSeparator? _ {
-    return new FunctionDescription(id, fs, ft, ts);
+  = __ oneway? ft:FunctionType id:Identifier '(' __ fs:Field* __ ')' __ ts:throwz? ta:TypeAnnotations? ListSeparator? _ {
+    return new FunctionDescription(id, fs, ft, ts, ta);
   }
 
 oneway
@@ -287,10 +304,17 @@ throwz
   }
 
 Field
-  = _ fid:FieldIdentifier req:FieldRequiredness? ft:FieldType id:Identifier FieldValue?
+  = _ fid:FieldIdentifier? req:FieldRequiredness? ft:FieldType rec:Recursive? id:Identifier FieldValue?
     XsdFieldOptions? ta:TypeAnnotations? ListSeparator? {
       return new Field(id, ft, fid, req, ta);
     }
+
+Recursive
+  = '&'? __ {
+    return true;
+  } / {
+    return false;
+  }
 
 FieldIdentifier
   = fid:IntConstant ':' _ { return fid.value; }
@@ -307,14 +331,19 @@ FunctionType
   / FieldType
 
 FieldType
-  = Identifier
-  / BaseType
+  = BaseType
   / ContainerType
+  / Identifier
 
 XsdFieldOptions
   = xsdOptional? xsdNillable? xsdAttributes?
 
 BaseType
+  = t:BaseTypeName __ ta:TypeAnnotations? {
+    return new BaseType(t, ta);
+  }
+
+BaseTypeName
   = 'bool'
   / 'byte'
   / 'i16'
@@ -331,12 +360,14 @@ ContainerType
   / ListType
 
 MapType
-  = 'map' __ cppType? '<' __ ft1:FieldType __ ',' __ ft2:FieldType __ '>' __ {
+  = 'map' __ cppType? '<' __ ft1:FieldType __ ',' __ ft2:FieldType __ '>'
+    __ ta:TypeAnnotations?
+  {
     return new MapType(ft1, ft2);
   }
 
 SetType
-  = 'set' __ cppType? '<' __ ft:FieldType __ '>' __ {
+  = 'set' __ cppType? '<' __ ft:FieldType __ '>' __ ta:TypeAnnotations? {
     return new SetType(ft);
   }
 
@@ -346,7 +377,7 @@ SetType
 // probably doesn't actually matter.
 
 ListType
-  = 'list' __ '<' __ ft:FieldType __ '>' __ cppType? {
+  = 'list' __ '<' __ ft:FieldType __ '>' __ ta:TypeAnnotations? cppType? {
     return new ListType(ft);
   }
 
@@ -359,8 +390,8 @@ TypeAnnotations
   }
 
 TypeAnnotation
-  = id:Identifier '=' __ l:Literal ListSeparator? {
-    return new TypeAnnotation(id, l);
+  = id:Identifier v:('=' __ l:Literal { return l })? ListSeparator? {
+    return new TypeAnnotation(id, v);
   }
 
 IntConstant
@@ -456,6 +487,7 @@ LineTerminatorSequence 'end of line'
 Comment 'comment'
   = MultiLineComment
   / SingleLineComment
+  / UnixComment
 
 MultiLineComment
   = '/*' comment:(!'*/' c:SourceCharacter { return c; })* '*/' {
@@ -467,6 +499,11 @@ MultiLineCommentNoLineTerminator
 
 SingleLineComment
   = '//' comment:(!LineTerminator sc:SourceCharacter { return sc; })* {
+    return new Comment(comment);
+  }
+
+UnixComment
+  = '#' comment:(!LineTerminator sc:SourceCharacter { return sc; })* {
     return new Comment(comment);
   }
 
@@ -531,7 +568,7 @@ UnicodeEscapeSequence
       return String.fromCharCode(parseInt(digits, 16));
     }
 
-HexIntegerLiteral
+HexIntegerLiteral 'hex literal'
   = '0x'i digits:$HexDigit+ {
       return new Literal(parseInt(digits, 16));
     }
@@ -539,13 +576,21 @@ HexIntegerLiteral
 HexDigit
   = [0-9a-f]i
 
-DoubleConstant
-  = [+-]? DecimalLiteral
+NumberLiteral 'number'
+  = HexIntegerLiteral
+  / [+-]? DecimalLiteral
+  / SignedInteger
 
-DecimalLiteral
-  = DecimalIntegerLiteral ('.' DecimalDigit+)? ExponentPart? { return { type: 'Literal', value: parseFloat(text(), 10) }; }
-  / '.' DecimalDigit+ ExponentPart? { return { type: 'Literal', value: parseFloat(text()) }; }
-  / DecimalIntegerLiteral ExponentPart? { return { type: 'Literal', value: parseFloat(text()) } }
+DecimalLiteral 'decimal literal'
+  = DecimalDigit+ ('.' DecimalDigit+)? ExponentPart? {
+    return new Literal(parseFloat(text()));
+  }
+  / '.' DecimalDigit+ ExponentPart? {
+    return new Literal(parseFloat(text()));
+  }
+  / DecimalDigit+ ExponentPart? {
+    return new Literal(parseFloat(text()));
+  }
 
 ExponentPart
   = ExponentIndicator SignedInteger
@@ -554,8 +599,7 @@ ExponentIndicator
   = 'e'i
 
 DecimalIntegerLiteral
-  = '0'
-  / NonZeroDigit DecimalDigit*
+  = DecimalDigit+
 
 DecimalDigit
   = [0-9]
