@@ -27,6 +27,7 @@ var util = require('util');
 var owns = Object.prototype.hasOwnProperty;
 var Result = require('../result');
 var SpecError = require('./error');
+var AString = require('./astring').AString;
 
 function AMap(ktype, vtype) {
     if (!(this instanceof AMap)) {
@@ -34,14 +35,29 @@ function AMap(ktype, vtype) {
     }
     this.typeid = TYPE.MAP;
 
+    // Treat numeric keys types as strings as all object properties are strings in JavaScript
+    if (ktype.typeid === TYPE.I32) {
+        ktype = AString();
+    }
+
     if (ktype.typeid !== TYPE.STRING) {
-        throw new Error('key type has to be TYPE.STRING; received %d', ktype.typeid);
+        throw new Error(util.format('key type has to be TYPE.STRING; received %d', ktype.typeid));
     }
     this.ktype = ktype;
     this.vtype = vtype;
 }
 
 AMap.prototype.reify = function reify(tmap) {
+
+    // re-ify maps of I32 as string keys for JS.
+    if(tmap.ktypeid === TYPE.I32) {
+        tmap.ktypeid = TYPE.STRING;
+        tmap.pairs = tmap.pairs.map(function itos(pair) {
+            pair.key = new Buffer(String(pair.key));
+            return pair;
+        });
+    }
+
     if (this.ktype.typeid !== tmap.ktypeid) {
         return new Result(SpecError(util.format('AMap::reify expects ktypeid %d; received %d',
             this.ktype.typeid, tmap.ktypeid)));
