@@ -1,3 +1,5 @@
+# DEPRECATED, use [thriftrw](https://github.com/thriftrw/thriftrw-node)
+
 # thriftify
 
 <!--
