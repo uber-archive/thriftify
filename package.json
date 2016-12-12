@@ -19,8 +19,8 @@
   "dependencies": {
     "pegjs": "^0.8.0",
     "lodash": "^3.5.0",
-    "thriftrw": "v1.0.0-beta3",
-    "bufrw": "^0.9.19",
+    "thriftrw": "^3.4.3",
+    "bufrw": "^1.2.1",
     "debug": "^2.1.3",
     "error": "^6.0.0"
   },
